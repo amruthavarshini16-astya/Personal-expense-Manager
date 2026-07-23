@@ -10,7 +10,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-# Import the database layer
+# Import the Oracle layer directly
 from db import OracleDB
 
 # 1. Initialize DB connector instance
@@ -33,22 +33,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ========================================================
-# CURRENCY CONFIGURATION
-# ========================================================
-currency_options = {
-    "INR (₹)": {"symbol": "₹", "rate": 1.0},
-    "USD ($)": {"symbol": "$", "rate": 0.012},
-    "EUR (€)": {"symbol": "€", "rate": 0.011}
-}
-
-# Default display currency parameters
-selected_currency_key = "INR (₹)"
-currency_symbol = currency_options[selected_currency_key]["symbol"]
-conversion_rate = currency_options[selected_currency_key]["rate"]
-
-db_conn = st.session_state.db_instance
-
 # 3. Modern SaaS Glassmorphism CSS styling
 custom_css = """
 <style>
@@ -56,11 +40,6 @@ custom_css = """
 
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    /* Hide Sidebar Navigation completely */
-    [data-testid="stSidebar"] {
-        display: none !important;
     }
 
     /* Dark Slate Background */
@@ -71,7 +50,7 @@ custom_css = """
 
     /* Top padding */
     .block-container {
-        padding-top: 2.5rem !important;
+        padding-top: 3.5rem !important;
     }
 
     /* Unique Title Styling */
@@ -82,6 +61,7 @@ custom_css = """
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         line-height: 1.3 !important;
+        padding-top: 6px;
         margin-bottom: 0.2rem;
         letter-spacing: -0.03em;
     }
@@ -120,8 +100,8 @@ custom_css = """
         background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
         color: #f8fafc !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        padding: 10px 16px !important;
-        border-radius: 10px !important;
+        padding: 12px 18px !important;
+        border-radius: 12px !important;
         font-weight: 600 !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
@@ -139,6 +119,13 @@ custom_css = """
         color: #f8fafc !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
         border-radius: 10px !important;
+    }
+
+    /* Table Styling */
+    div[data-testid="stDataFrame"] {
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     /* Health Badge */
@@ -159,30 +146,39 @@ st.markdown(custom_css, unsafe_allow_html=True)
 # ========================================================
 # HELPER: PDF GENERATION ENGINE
 # ========================================================
-def generate_pdf_report(df, total_spent, primary_cat, limit, period_label, symbol):
+def generate_pdf_report(df, total_spent, primary_cat, limit, period_label):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
     story = []
     
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
-        'DocTitle', parent=styles['Heading1'], fontSize=20, textColor=colors.HexColor('#1e1b4b'), spaceAfter=6
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontSize=20,
+        textColor=colors.HexColor('#1e1b4b'),
+        spaceAfter=6
     )
     subtitle_style = ParagraphStyle(
-        'DocSub', parent=styles['Normal'], fontSize=10, textColor=colors.HexColor('#64748b'), spaceAfter=15
+        'DocSub',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#64748b'),
+        spaceAfter=15
     )
 
+    # Title Banner
     story.append(Paragraph("Personal Expense Manager - Financial Report", title_style))
     story.append(Paragraph(f"Report Period: {period_label} | Generated on: {date.today().strftime('%Y-%m-%d')}", subtitle_style))
     story.append(Spacer(1, 10))
 
-    amt_col_name = f"Amount ({symbol})"
-    avg_spend = df[amt_col_name].mean() if not df.empty else 0.0
+    # Summary Metrics Table
+    avg_spend = df["Amount (₹)"].mean() if not df.empty else 0.0
     summary_data = [
-        [Paragraph("<b>Total Spending</b>", styles['Normal']), f"{symbol}{total_spent:,.2f}"],
-        [Paragraph("<b>Spending Limit</b>", styles['Normal']), f"{symbol}{limit:,.2f}"],
+        [Paragraph("<b>Total Spending</b>", styles['Normal']), f"Rs. {total_spent:,.2f}"],
+        [Paragraph("<b>Spending Limit</b>", styles['Normal']), f"Rs. {limit:,.2f}"],
         [Paragraph("<b>Top Spending Category</b>", styles['Normal']), str(primary_cat)],
-        [Paragraph("<b>Average Ticket Size</b>", styles['Normal']), f"{symbol}{avg_spend:,.2f}"],
+        [Paragraph("<b>Average Ticket Size</b>", styles['Normal']), f"Rs. {avg_spend:,.2f}"],
         [Paragraph("<b>Total Transactions</b>", styles['Normal']), str(len(df))]
     ]
     
@@ -196,17 +192,18 @@ def generate_pdf_report(df, total_spent, primary_cat, limit, period_label, symbo
     story.append(t_summary)
     story.append(Spacer(1, 20))
 
+    # Transactions Ledger Section
     story.append(Paragraph("Detailed Ledger Transactions", styles['Heading2']))
     story.append(Spacer(1, 8))
 
     if not df.empty:
-        table_data = [["Date", "Description", "Category", f"Amount ({symbol})"]]
+        table_data = [["Date", "Description", "Category", "Amount (Rs.)"]]
         for _, row in df.iterrows():
             table_data.append([
                 str(row["Date"]),
                 str(row["Description"])[:30],
                 str(row["Category"]),
-                f"{symbol}{row[amt_col_name]:,.2f}"
+                f"Rs. {row['Amount (₹)']:,.2f}"
             ])
             
         t_ledger = Table(table_data, colWidths=[80, 220, 110, 90])
@@ -231,17 +228,18 @@ def generate_pdf_report(df, total_spent, primary_cat, limit, period_label, symbo
 # BUDGET MODAL DIALOG
 # ========================================================
 @st.dialog("🎯 Budget & Savings Planner")
-def show_budget_modal(symbol, rate):
+def show_budget_modal():
     st.markdown(
         "<p style='color: #94a3b8; font-size: 0.9rem;'>Configure your monthly earnings to automatically calculate your recommended spending ceiling and savings target.</p>",
         unsafe_allow_html=True,
     )
+    st.markdown("<br>", unsafe_allow_html=True)
 
     monthly_income = st.number_input(
-        f"Monthly Income ({symbol})",
+        "Monthly Income (₹)",
         min_value=0.0,
-        value=st.session_state.get("popover_income", 30000.0 * rate),
-        step=1000.0 * rate,
+        value=st.session_state.get("popover_income", 30000.0),
+        step=1000.0,
         format="%.2f",
         key="popover_income",
     )
@@ -258,68 +256,78 @@ def show_budget_modal(symbol, rate):
     target_savings = monthly_income * (savings_pct / 100.0)
     spending_limit = monthly_income - target_savings
 
+    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
         f"""
         <div style="background: rgba(30, 41, 59, 0.7); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Target Savings Goal ({savings_pct}%):</span>
-                <strong style="color: #a5b4fc; font-size: 0.95rem;">{symbol}{target_savings:,.2f}</strong>
+                <strong style="color: #a5b4fc; font-size: 0.95rem;">₹{target_savings:,.2f}</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Max Expense Ceiling:</span>
-                <strong style="color: #38bdf8; font-size: 0.95rem;">{symbol}{spending_limit:,.2f}</strong>
+                <strong style="color: #38bdf8; font-size: 0.95rem;">₹{spending_limit:,.2f}</strong>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Save & Apply Target", use_container_width=True, type="primary"):
         st.rerun()
 
 # ========================================================
 # HEADER SECTION
 # ========================================================
-st.markdown('<div class="custom-header">Personal Expense Manager</div>', unsafe_allow_html=True)
-st.markdown('<div class="custom-subtitle">An intelligent, NLP-driven financial ledger</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="custom-header">Personal Expense Manager</div>',
+    unsafe_allow_html=True,
+)
+st.markdown(
+    '<div class="custom-subtitle">An intelligent, NLP-driven financial ledger powered by Oracle Database</div>',
+    unsafe_allow_html=True,
+)
 
 # Re-calculate budget variables for session state
 if "popover_income" in st.session_state and "popover_savings" in st.session_state:
     monthly_income = st.session_state.popover_income
     savings_pct = st.session_state.popover_savings
 else:
-    monthly_income = 30000.0 * conversion_rate
+    monthly_income = 30000.0
     savings_pct = 20
 
 target_savings = monthly_income * (savings_pct / 100.0)
 spending_limit = monthly_income - target_savings
 
 # ========================================================
-# DATA EXTRACTION LAYER
+# DATA EXTRACTION LAYER (Oracle Integration)
 # ========================================================
+db_conn = st.session_state.db_instance
+
 try:
     raw_rows = db_conn.query_dicts(
-        "SELECT expense_date, description, amount, category FROM expenses ORDER BY expense_date DESC"
+        "SELECT ROWID, expense_date, description, amount, category FROM expenses ORDER BY expense_date DESC"
     )
 
     if raw_rows:
         ledger_df = pd.DataFrame(raw_rows)
-        ledger_df.columns = ["Date", "Description", f"Amount ({currency_symbol})", "Category"]
-        ledger_df[f"Amount ({currency_symbol})"] = pd.to_numeric(ledger_df[f"Amount ({currency_symbol})"]) * conversion_rate
+        ledger_df.columns = ["ROW_ID", "Date", "Description", "Amount (₹)", "Category"]
+        ledger_df["Amount (₹)"] = pd.to_numeric(ledger_df["Amount (₹)"])
         ledger_df["Date"] = ledger_df["Date"].astype(str)
     else:
         ledger_df = pd.DataFrame(
-            columns=["Date", "Description", f"Amount ({currency_symbol})", "Category"]
+            columns=["ROW_ID", "Date", "Description", "Amount (₹)", "Category"]
         )
 except Exception as e:
-    st.error(f"Failed to fetch data: {e}")
+    st.error(f"Failed to fetch data from Oracle database: {e}")
     ledger_df = pd.DataFrame(
-        columns=["Date", "Description", f"Amount ({currency_symbol})", "Category"]
+        columns=["ROW_ID", "Date", "Description", "Amount (₹)", "Category"]
     )
 
 # Check daily logging status & show dismissible pill badge
 today_str = date.today().strftime("%Y-%m-%d")
-logged_today = not ledger_df[ledger_df["Date"] == today_str].empty if not ledger_df.empty else False
+logged_today = not ledger_df[ledger_df["Date"] == today_str].empty
 
 if not logged_today and not st.session_state.hide_daily_pill:
     p_col1, p_col2 = st.columns([20, 1])
@@ -355,79 +363,105 @@ with col1:
 
     preview_cat = "Miscellaneous"
 
-    # Quick Rule/Pattern Based Auto-Categorization
+    # 🧠 ADVANCED SEMANTIC NLP ENGINE
     if input_desc:
-        desc_lower = input_desc.lower()
-        food_terms = ["food", "snack", "dinner", "lunch", "coffee", "curd", "biryani", "swiggy", "zomato"]
-        bill_terms = ["bill", "electricity", "rent", "recharge", "wifi"]
-        tech_terms = ["laptop", "charger", "mouse", "lenovo", "keyboard"]
+        import spacy
 
-        if any(w in desc_lower for w in food_terms):
+        try:
+            nlp = spacy.load("en_core_web_md")
+        except Exception:
+            import subprocess
+            import sys
+
+            st.warning(
+                "⏳ Syncing NLP pipeline... Downloading model directly into the active kernel."
+            )
+            subprocess.check_call(
+                [sys.executable, "-m", "spacy", "download", "en_core_web_md"]
+            )
+            nlp = spacy.load("en_core_web_md")
+
+        desc_doc = nlp(input_desc.lower())
+
+        food_anchor = nlp("food dining restaurant snack grocery streetfood eat item")
+        tech_anchor = nlp("technology electronics laptop computer gadget device")
+        bill_anchor = nlp("bill utility electricity rent recharge power internet")
+
+        food_score = desc_doc.similarity(food_anchor)
+        tech_score = desc_doc.similarity(tech_anchor)
+        bill_score = desc_doc.similarity(bill_anchor)
+
+        local_food_terms = [
+            "pani puri", "chaat", "biryani", "mandi", "samosa",
+            "momo", "maggi", "kurkure", "lays", "swiggy", "zomato", "curd"
+        ]
+
+        if food_score > 0.4 or any(w in desc_doc.text for w in local_food_terms):
             preview_cat = "Food & Dining"
             color = "#f59e0b"
-        elif any(w in desc_lower for w in bill_terms):
-            preview_cat = "Bills & Utilities"
-            color = "#10b981"
-        elif any(w in desc_lower for w in tech_terms):
+        elif tech_score > 0.4 or any(
+            w in desc_doc.text for w in ["lenovo", "charger", "mouse", "keyboard", "laptop"]
+        ):
             preview_cat = "Electronics"
             color = "#38bdf8"
+        elif bill_score > 0.4 or any(
+            w in desc_doc.text for w in ["recharge", "wifi", "current", "bill"]
+        ):
+            preview_cat = "Bills & Utilities"
+            color = "#10b981"
         else:
             preview_cat = "Miscellaneous"
             color = "#64748b"
 
         st.markdown(
-            f'<div style="background-color:rgba(15, 23, 42, 0.8); padding:10px;'
-            f' border-radius:8px; border-left:3px solid {color}; margin: 8px 0 16px 0;">'
-            f'<span style="color:#94a3b8; font-size:0.75rem; text-transform:uppercase; display:block;">Categorized As</span>'
-            f'<strong style="color:{color}; font-size:0.95rem;">{preview_cat}</strong></div>',
+            f'<div style="background-color:rgba(15, 23, 42, 0.8); padding:12px;'
+            f' border-radius:10px; border-left:3px solid {color}; margin: 8px 0 16px 0;">'
+            f'<span style="color:#94a3b8; font-size:0.75rem; text-transform:uppercase;'
+            f' letter-spacing:0.05em; display:block;">NLP Classification Target</span>'
+            f'<strong style="color:{color}; font-size:0.95rem;">{preview_cat}'
+            f' (Score: {max(food_score, tech_score, bill_score):.2f})</strong></div>',
             unsafe_allow_html=True,
         )
 
-    # --- MULTI-CURRENCY LOGGING INPUT ---
-    amt_col1, amt_col2 = st.columns([2, 1])
-    with amt_col1:
-        input_amount = st.number_input(
-            "Amount",
-            min_value=0.0,
-            step=1.0,
-            format="%.2f"
-        )
-    with amt_col2:
-        log_currency = st.selectbox(
-            "Currency",
-            options=list(currency_options.keys()),
-            index=0,
-            key="log_transaction_currency"
-        )
-
-    # Get rate for selected transaction currency
-    input_currency_rate = currency_options[log_currency]["rate"]
+    input_amount = st.number_input(
+        "Amount (₹)", min_value=0.0, step=1.0, format="%.2f"
+    )
 
     if st.button("Add Expense to Ledger", use_container_width=True, key="main_submit_btn"):
         if not input_desc or input_amount <= 0:
             st.error("Please provide a valid description and amount.")
         else:
             try:
-                # Convert entered amount to base currency (INR) before storing
-                base_inr_amount = input_amount / input_currency_rate
-                
                 insert_query = (
                     "INSERT INTO expenses (expense_date, description, amount, category) "
-                    "VALUES (:1, :2, :3, :4)"
+                    "VALUES (TO_DATE(:1, 'YYYY-MM-DD'), :2, :3, :4)"
                 )
                 db_conn.execute(
                     insert_query,
                     {
                         "1": input_date.strftime("%Y-%m-%d"),
                         "2": input_desc.strip(),
-                        "3": base_inr_amount,
+                        "3": input_amount,
                         "4": preview_cat,
                     },
                 )
-                st.success(f"Recorded {currency_options[log_currency]['symbol']}{input_amount:,.2f} under {preview_cat}!")
+                st.success(f"Transaction recorded under {preview_cat}")
                 st.rerun()
             except Exception as ex:
                 st.error(f"Database write error: {ex}")
+
+    st.markdown("---")
+    st.markdown("### System Health")
+    st.markdown(
+        """
+        <div class="status-badge">
+            <span style="color:#10b981;">●</span> Oracle DB: Connected<br>
+            <span style="color:#10b981;">●</span> Driver: Local Thick Client<br>
+            <span style="color:#10b981;">●</span> NLP Model: spaCy en_core_web_md
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # --------------------------------------------------------
 # COLUMN 2: Visual Dashboard & Analytics
@@ -447,8 +481,9 @@ with col2:
 
     with ana_col3:
         if st.button("💰 Budget Targets", use_container_width=True, key="open_budget_btn"):
-            show_budget_modal(currency_symbol, conversion_rate)
+            show_budget_modal()
 
+    # Filter ledger dataframe based on Date Selection
     filtered_analytics_df = ledger_df.copy()
     if not filtered_analytics_df.empty:
         filtered_analytics_df["Date_DT"] = pd.to_datetime(filtered_analytics_df["Date"])
@@ -464,93 +499,102 @@ with col2:
             thirty_days_ago = datetime.today() - timedelta(days=30)
             filtered_analytics_df = filtered_analytics_df[filtered_analytics_df["Date_DT"] >= thirty_days_ago]
 
-    amt_col = f"Amount ({currency_symbol})"
-    total_spent = filtered_analytics_df[amt_col].sum() if not filtered_analytics_df.empty else 0.0
+    total_spent = filtered_analytics_df["Amount (₹)"].sum() if not filtered_analytics_df.empty else 0.0
     primary_cat = (
         filtered_analytics_df["Category"].mode()[0]
         if not filtered_analytics_df.empty and not filtered_analytics_df["Category"].dropna().empty
         else "None Logged"
     )
 
+    # Dynamic Budget Progress Tracker
     if spending_limit > 0:
         budget_pct = min(total_spent / spending_limit, 1.0)
-        st.markdown(f"**Spending vs. Expense Limit ({date_filter}):** {currency_symbol}{total_spent:,.2f} / {currency_symbol}{spending_limit:,.2f}")
+        st.markdown(
+            f"**Spending vs. Expense Limit ({date_filter}):** ₹{total_spent:,.2f} / ₹{spending_limit:,.2f}"
+        )
         st.progress(budget_pct)
 
         if total_spent > spending_limit:
-            st.warning(f"⚠️ Limit exceeded by {currency_symbol}{total_spent - spending_limit:,.2f}!")
+            st.warning(
+                f"⚠️ You've exceeded your monthly expense limit by ₹{total_spent - spending_limit:,.2f}! "
+                "This eats into your savings goal."
+            )
+    else:
+        st.info("Set your monthly income in the budget popover to calculate limits.")
 
-    # --------------------------------------------------------
-    # KPI Cards Section
-    # --------------------------------------------------------
-    st.markdown("<br>", unsafe_allow_html=True)
+    # Automated Budget Alerts & Spending Velocity Health Check
+    if not filtered_analytics_df.empty and spending_limit > 0:
+        daily_threshold = spending_limit / 30.0
+        unique_days = max(filtered_analytics_df["Date"].nunique(), 1)
+        daily_burn = total_spent / unique_days
+        
+        category_totals = filtered_analytics_df.groupby("Category")["Amount (₹)"].sum()
+        max_cat_spend = category_totals.max() if not category_totals.empty else 0
+        top_cat_name = category_totals.idxmax() if not category_totals.empty else ""
+        cat_concentration = (max_cat_spend / total_spent) if total_spent > 0 else 0
 
-    avg_spend = filtered_analytics_df[amt_col].mean() if not filtered_analytics_df.empty else 0.0
-    max_spend = filtered_analytics_df[amt_col].max() if not filtered_analytics_df.empty else 0.0
+        alert_msg = []
+        if daily_burn > daily_threshold:
+            alert_msg.append(f"🔥 **High Pace:** Daily spend is **₹{daily_burn:,.2f}/day** (target max: ₹{daily_threshold:,.2f}/day).")
+        if cat_concentration > 0.5 and total_spent > 1000:
+            alert_msg.append(f"⚠️ **Concentration Risk:** **{top_cat_name}** consumes **{cat_concentration:.0%}** of your total spend!")
 
-    # Row 1: Proportional Breakdown & Trend Velocity
-    top_col1, top_col2 = st.columns(2)
-
-    with top_col1:
-        st.markdown(
-            '<span style="color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Proportional Breakdown</span>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            f"""
-            <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); 
-                        border-radius: 12px; padding: 18px; text-align: center; margin-top: 6px;">
-                <div style="color: #cbd5e1; font-size: 0.95rem; font-weight: 500;">Total Spending</div>
-                <div style="color: #ffffff; font-size: 1.25rem; font-weight: 700; margin-top: 4px;">{currency_symbol}{total_spent:,.2f}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with top_col2:
-        st.markdown(
-            '<span style="color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Trend Velocity</span>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            f"""
-            <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); 
-                        border-radius: 12px; padding: 18px; text-align: center; margin-top: 6px;">
-                <div style="color: #cbd5e1; font-size: 0.95rem; font-weight: 500;">Top Category</div>
-                <div style="color: #ffffff; font-size: 1.1rem; font-weight: 700; margin-top: 4px;">{primary_cat}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        if alert_msg:
+            st.warning(" ".join(alert_msg))
 
     st.markdown("<br>", unsafe_allow_html=True)
+    metrics_col1, metrics_col2 = st.columns(2)
 
-    # Row 2: Highlighted Cards
-    bot_col1, bot_col2 = st.columns(2)
+    with metrics_col1:
+        st.markdown(
+            '<p style="margin:0 0 6px 0; color:#94a3b8; font-size:0.8rem;">PROPORTIONAL BREAKDOWN</p>',
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            f"Total Spending\n\n₹{total_spent:,.2f}",
+            key="card_spending",
+            use_container_width=True,
+            type="primary" if st.session_state.active_view == "Breakdown" else "secondary",
+        ):
+            st.session_state.active_view = "Breakdown"
+            st.rerun()
 
-    with bot_col1:
+    with metrics_col2:
+        st.markdown(
+            '<p style="margin:0 0 6px 0; color:#94a3b8; font-size:0.8rem;">TREND VELOCITY</p>',
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            f"Top Category\n\n{primary_cat}",
+            key="card_category",
+            use_container_width=True,
+            type="primary" if st.session_state.active_view == "Velocity" else "secondary",
+        ):
+            st.session_state.active_view = "Velocity"
+            st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    kpi1, kpi2 = st.columns(2)
+
+    with kpi1:
+        avg_spend = filtered_analytics_df["Amount (₹)"].mean() if not filtered_analytics_df.empty else 0.0
         st.markdown(
             f"""
-            <div style="background: rgba(15, 23, 42, 0.65); border: 2px solid #38bdf8; 
-                        border-radius: 12px; padding: 18px; margin-top: 6px;">
-                <div style="color: #cbd5e1; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
-                    ⚡ AVG. TICKET
-                </div>
-                <div style="color: #ffffff; font-size: 1.5rem; font-weight: 800; margin-top: 8px;">{currency_symbol}{avg_spend:,.2f}</div>
+            <div style="background: rgba(15, 23, 42, 0.7); padding: 18px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); border-top: 3px solid #38bdf8;">
+                <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">⚡ Avg. Ticket</span><br>
+                <strong style="color: #f8fafc; font-size: 1.4rem; font-weight: 800;">₹{avg_spend:,.2f}</strong>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    with bot_col2:
+    with kpi2:
+        max_spend = filtered_analytics_df["Amount (₹)"].max() if not filtered_analytics_df.empty else 0.0
         st.markdown(
             f"""
-            <div style="background: rgba(15, 23, 42, 0.65); border: 2px solid #f43f5e; 
-                        border-radius: 12px; padding: 18px; margin-top: 6px;">
-                <div style="color: #cbd5e1; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
-                    🔥 LARGEST EXPENSE
-                </div>
-                <div style="color: #ffffff; font-size: 1.5rem; font-weight: 800; margin-top: 8px;">{currency_symbol}{max_spend:,.2f}</div>
+            <div style="background: rgba(15, 23, 42, 0.7); padding: 18px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); border-top: 3px solid #f43f5e;">
+                <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">🔥 Largest Expense</span><br>
+                <strong style="color: #f8fafc; font-size: 1.4rem; font-weight: 800;">₹{max_spend:,.2f}</strong>
             </div>
             """,
             unsafe_allow_html=True,
@@ -559,39 +603,83 @@ with col2:
     st.markdown("---")
 
     if filtered_analytics_df.empty:
-        st.info("No records found for this period.")
+        st.info("No records found for this period. Add an expense or adjust date filter to activate insights.")
     else:
-        st.markdown("#### Category Distribution")
-        fig_donut = px.pie(
-            filtered_analytics_df,
-            values=amt_col,
-            names="Category",
-            hole=0.6,
-            color_discrete_sequence=px.colors.sequential.Darkmint_r,
-        )
-        fig_donut.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font_color="#e2e8f0",
-            margin=dict(t=10, b=10, l=10, r=10),
-            height=250,
-        )
-        st.plotly_chart(fig_donut, use_container_width=True)
+        if st.session_state.active_view == "Breakdown":
+            st.markdown("#### Expense Category Distribution")
+            fig_donut = px.pie(
+                filtered_analytics_df,
+                values="Amount (₹)",
+                names="Category",
+                hole=0.65,
+                color_discrete_sequence=px.colors.sequential.Darkmint_r,
+            )
+            fig_donut.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font_color="#e2e8f0",
+                margin=dict(t=10, b=10, l=10, r=10),
+                height=250,
+            )
+            st.plotly_chart(fig_donut, use_container_width=True)
+
+        elif st.session_state.active_view == "Velocity":
+            st.markdown("#### Spending Timeline")
+            trend_data = (
+                filtered_analytics_df.groupby("Date")["Amount (₹)"]
+                .sum()
+                .reset_index()
+                .sort_values("Date")
+            )
+            fig_area = px.area(trend_data, x="Date", y="Amount (₹)", markers=True)
+            fig_area.update_traces(
+                line_color="#818cf8", fillcolor="rgba(129, 140, 248, 0.15)"
+            )
+            fig_area.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font_color="#e2e8f0",
+                margin=dict(t=10, b=10, l=10, r=10),
+                height=250,
+            )
+            st.plotly_chart(fig_area, use_container_width=True)
 
     st.markdown("---")
 
-    # Table Controls
-    tbl_col1, tbl_col2, tbl_col3 = st.columns([2, 1, 1])
+    # Table Controls Header (Search, Excel & PDF Export)
+    tbl_col1, tbl_col2, tbl_col3, tbl_col4 = st.columns([1.5, 1, 1, 1])
 
     with tbl_col1:
-        st.markdown("#### Transactions Ledger")
-
-    display_df = filtered_analytics_df.drop(columns=["Date_DT"], errors="ignore") if not filtered_analytics_df.empty else filtered_analytics_df
+        st.markdown("#### Master Ledger")
 
     with tbl_col2:
+        search_term = st.text_input(
+            "Filter", placeholder="Search...", label_visibility="collapsed"
+        )
+
+    # Filter dataframe based on search input
+    filtered_df = filtered_analytics_df.copy()
+    if search_term and not filtered_df.empty:
+        filtered_df = filtered_df[
+            filtered_df["Description"].str.lower().str.contains(search_term.lower())
+            | filtered_df["Category"].str.lower().str.contains(search_term.lower())
+        ]
+
+    # Excel Download Button
+    with tbl_col3:
         excel_buffer = io.BytesIO()
-        if not display_df.empty:
-            display_df.to_excel(excel_buffer, index=False)
+        export_excel_df = filtered_df.drop(columns=["ROW_ID", "Date_DT"], errors="ignore")
+        with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+            export_excel_df.to_excel(writer, index=False, sheet_name="Ledger")
+            worksheet = writer.sheets["Ledger"]
+            for col in worksheet.columns:
+                max_len = 0
+                col_letter = col[0].column_letter
+                for cell in col:
+                    if cell.value:
+                        max_len = max(max_len, len(str(cell.value)))
+                worksheet.column_dimensions[col_letter].width = max(max_len + 5, 14)
+
         st.download_button(
             label="📊 Excel",
             data=excel_buffer.getvalue(),
@@ -600,9 +688,10 @@ with col2:
             use_container_width=True,
         )
 
-    with tbl_col3:
+    # PDF Report Generator Download Button
+    with tbl_col4:
         pdf_data = generate_pdf_report(
-            display_df, total_spent, primary_cat, spending_limit, date_filter, currency_symbol
+            export_excel_df, total_spent, primary_cat, spending_limit, date_filter
         )
         st.download_button(
             label="📄 PDF Report",
@@ -612,4 +701,32 @@ with col2:
             use_container_width=True,
         )
 
+    # Clean display copy for DataFrame
+    display_df = filtered_df.drop(columns=["ROW_ID", "Date_DT"], errors="ignore")
     st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+    # Transaction Deletion Tool
+    st.markdown("---")
+    with st.expander("🗑️ Delete or Manage Transactions"):
+        if not ledger_df.empty:
+            ledger_df["Delete_Label"] = (
+                ledger_df["Date"] + " | " + 
+                ledger_df["Description"] + " (₹" + 
+                ledger_df["Amount (₹)"].astype(str) + ")"
+            )
+            
+            selected_tx = st.selectbox(
+                "Select Transaction to Remove",
+                options=ledger_df["Delete_Label"].tolist(),
+            )
+            
+            if st.button("Delete Selected Transaction", type="primary"):
+                target_rowid = ledger_df[ledger_df["Delete_Label"] == selected_tx]["ROW_ID"].values[0]
+                try:
+                    db_conn.execute("DELETE FROM expenses WHERE ROWID = :1", {"1": target_rowid})
+                    st.success("Transaction removed from database.")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"Failed to delete record: {ex}")
+        else:
+            st.info("No recorded transactions available to delete.")
