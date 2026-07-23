@@ -506,21 +506,41 @@ with col2:
         else "None Logged"
     )
 
-    # Dynamic Budget Progress Tracker
+    # ========================================================
+    # DYNAMIC BUDGET PROGRESS & THRESHOLD ALERTS
+    # ========================================================
     if spending_limit > 0:
-        budget_pct = min(total_spent / spending_limit, 1.0)
-        st.markdown(
-            f"**Spending vs. Expense Limit ({date_filter}):** ₹{total_spent:,.2f} / ₹{spending_limit:,.2f}"
-        )
-        st.progress(budget_pct)
+        usage_ratio = total_spent / spending_limit if spending_limit > 0 else 0
+        progress_val = min(usage_ratio, 1.0)
 
-        if total_spent > spending_limit:
+        st.markdown(
+            f"**Spending vs. Expense Limit ({date_filter}):** ₹{total_spent:,.2f} / ₹{spending_limit:,.2f} "
+            f"*(**{usage_ratio:.1%}** used)*"
+        )
+        st.progress(progress_val)
+
+        # 🚨 Dynamic Multi-Tier Threshold Alerts
+        if usage_ratio >= 1.0:
+            st.error(
+                f"🚨 **Budget Exceeded!** You have overspent by **₹{total_spent - spending_limit:,.2f}**. "
+                "Consider reviewing recent transactions to avoid dipping further into savings."
+            )
+        elif usage_ratio >= 0.85:
             st.warning(
-                f"⚠️ You've exceeded your monthly expense limit by ₹{total_spent - spending_limit:,.2f}! "
-                "This eats into your savings goal."
+                f"⚠️ **High Expense Warning!** You have used **{usage_ratio:.0%}** of your spending limit. "
+                f"Remaining balance: **₹{spending_limit - total_spent:,.2f}**."
+            )
+        elif usage_ratio >= 0.70:
+            st.info(
+                f"💡 **Caution:** You've reached **{usage_ratio:.0%}** of your expense cap. "
+                f"Remaining balance: **₹{spending_limit - total_spent:,.2f}**."
+            )
+        else:
+            st.success(
+                f"🟢 **On Track:** You are within target! Remaining budget: **₹{spending_limit - total_spent:,.2f}**."
             )
     else:
-        st.info("Set your monthly income in the budget popover to calculate limits.")
+        st.info("💡 Set your monthly income in the Budget Targets modal above to calculate spending limits.")
 
     # Automated Budget Alerts & Spending Velocity Health Check
     if not filtered_analytics_df.empty and spending_limit > 0:
