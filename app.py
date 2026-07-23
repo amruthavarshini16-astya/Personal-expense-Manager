@@ -365,47 +365,48 @@ with col1:
 
     # 🧠 ADVANCED SEMANTIC NLP ENGINE
     if input_desc:
-        import spacy
-
         try:
-            nlp = spacy.load("en_core_web_md")
+            @st.cache_resource
+            def load_nlp_model():
+                import spacy
+                try:
+                    return spacy.load("en_core_web_md")
+                except OSError:
+                    import subprocess
+                    import sys
+                    subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_md"])
+                    return spacy.load("en_core_web_md")
+
+            nlp = load_nlp_model()
+            desc_doc = nlp(input_desc.lower())
+
+            food_anchor = nlp("food dining restaurant snack grocery streetfood eat item")
+            tech_anchor = nlp("technology electronics laptop computer gadget device")
+            bill_anchor = nlp("bill utility electricity rent recharge power internet")
+
+            food_score = desc_doc.similarity(food_anchor)
+            tech_score = desc_doc.similarity(tech_anchor)
+            bill_score = desc_doc.similarity(bill_anchor)
+            max_score = max(food_score, tech_score, bill_score)
         except Exception:
-            import subprocess
-            import sys
-
-            st.warning(
-                "⏳ Syncing NLP pipeline... Downloading model directly into the active kernel."
-            )
-            subprocess.check_call(
-                [sys.executable, "-m", "spacy", "download", "en_core_web_md"]
-            )
-            nlp = spacy.load("en_core_web_md")
-
-        desc_doc = nlp(input_desc.lower())
-
-        food_anchor = nlp("food dining restaurant snack grocery streetfood eat item")
-        tech_anchor = nlp("technology electronics laptop computer gadget device")
-        bill_anchor = nlp("bill utility electricity rent recharge power internet")
-
-        food_score = desc_doc.similarity(food_anchor)
-        tech_score = desc_doc.similarity(tech_anchor)
-        bill_score = desc_doc.similarity(bill_anchor)
+            food_score, tech_score, bill_score = 0.0, 0.0, 0.0
+            max_score = 0.0
 
         local_food_terms = [
             "pani puri", "chaat", "biryani", "mandi", "samosa",
-            "momo", "maggi", "kurkure", "lays", "swiggy", "zomato", "curd"
+            "momo", "maggi", "kurkure", "lays", "swiggy", "zomato", "curd", "rice"
         ]
 
-        if food_score > 0.4 or any(w in desc_doc.text for w in local_food_terms):
+        if food_score > 0.4 or any(w in input_desc.lower() for w in local_food_terms):
             preview_cat = "Food & Dining"
             color = "#f59e0b"
         elif tech_score > 0.4 or any(
-            w in desc_doc.text for w in ["lenovo", "charger", "mouse", "keyboard", "laptop"]
+            w in input_desc.lower() for w in ["lenovo", "charger", "mouse", "keyboard", "laptop"]
         ):
             preview_cat = "Electronics"
             color = "#38bdf8"
         elif bill_score > 0.4 or any(
-            w in desc_doc.text for w in ["recharge", "wifi", "current", "bill"]
+            w in input_desc.lower() for w in ["recharge", "wifi", "current", "bill"]
         ):
             preview_cat = "Bills & Utilities"
             color = "#10b981"
@@ -419,7 +420,7 @@ with col1:
             f'<span style="color:#94a3b8; font-size:0.75rem; text-transform:uppercase;'
             f' letter-spacing:0.05em; display:block;">NLP Classification Target</span>'
             f'<strong style="color:{color}; font-size:0.95rem;">{preview_cat}'
-            f' (Score: {max(food_score, tech_score, bill_score):.2f})</strong></div>',
+            f' (Score: {max_score:.2f})</strong></div>',
             unsafe_allow_html=True,
         )
 
