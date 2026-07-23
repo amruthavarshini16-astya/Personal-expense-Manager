@@ -30,8 +30,71 @@ st.set_page_config(
     page_title="Personal Expense Manager",
     page_icon="💳",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
+
+# ========================================================
+# FEATURE 1: MULTI-CURRENCY CONVERTER CONFIGURATION
+# ========================================================
+currency_options = {
+    "INR (₹)": {"symbol": "₹", "rate": 1.0},
+    "USD ($)": {"symbol": "$", "rate": 0.012},
+    "EUR (€)": {"symbol": "€", "rate": 0.011}
+}
+
+st.sidebar.markdown("### 💱 Currency Preferences")
+selected_currency_key = st.sidebar.selectbox(
+    "Active Display Currency",
+    options=list(currency_options.keys()),
+    index=0
+)
+
+currency_symbol = currency_options[selected_currency_key]["symbol"]
+conversion_rate = currency_options[selected_currency_key]["rate"]
+
+st.sidebar.markdown("---")
+
+# ========================================================
+# FEATURE 3: RECURRING MONTHLY EXPENSES TRACKER
+# ========================================================
+st.sidebar.markdown("### 📅 Recurring Expenses")
+st.sidebar.markdown("<p style='color: #94a3b8; font-size: 0.8rem;'>Log your fixed monthly bills with a single click:</p>", unsafe_allow_html=True)
+
+recurring_items = [
+    {"name": "House Rent", "amount": 5000.00, "category": "Bills & Utilities"},
+    {"name": "WiFi / Internet", "amount": 799.00, "category": "Bills & Utilities"},
+    {"name": "Netflix Subscription", "amount": 199.00, "category": "Entertainment"}
+]
+
+db_conn = st.session_state.db_instance
+
+for item in recurring_items:
+    r_col1, r_col2 = st.sidebar.columns([2, 1])
+    converted_item_amt = item["amount"] * conversion_rate
+    with r_col1:
+        st.sidebar.markdown(f"**{item['name']}**<br><span style='color:#94a3b8; font-size:0.8rem;'>{currency_symbol}{converted_item_amt:,.2f}</span>", unsafe_allow_html=True)
+    with r_col2:
+        if st.sidebar.button("Log", key=f"btn_recurring_{item['name']}"):
+            try:
+                insert_query = (
+                    "INSERT INTO expenses (expense_date, description, amount, category) "
+                    "VALUES (TO_DATE(:1, 'YYYY-MM-DD'), :2, :3, :4)"
+                )
+                db_conn.execute(
+                    insert_query,
+                    {
+                        "1": date.today().strftime("%Y-%m-%d"),
+                        "2": item["name"],
+                        "3": item["amount"],  # Save base INR in database
+                        "4": item["category"],
+                    },
+                )
+                st.sidebar.success(f"Logged {item['name']}!")
+                st.rerun()
+            except Exception as ex:
+                st.sidebar.error(f"Error: {ex}")
+
+st.sidebar.markdown("---")
 
 # 3. Modern SaaS Glassmorphism CSS styling
 custom_css = """
@@ -146,7 +209,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 # ========================================================
 # HELPER: PDF GENERATION ENGINE
 # ========================================================
-def generate_pdf_report(df, total_spent, primary_cat, limit, period_label):
+def generate_pdf_report(df, total_spent, primary_cat, limit, period_label, symbol):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
     story = []
@@ -173,12 +236,13 @@ def generate_pdf_report(df, total_spent, primary_cat, limit, period_label):
     story.append(Spacer(1, 10))
 
     # Summary Metrics Table
-    avg_spend = df["Amount (₹)"].mean() if not df.empty else 0.0
+    amt_col_name = f"Amount ({symbol})"
+    avg_spend = df[amt_col_name].mean() if not df.empty else 0.0
     summary_data = [
-        [Paragraph("<b>Total Spending</b>", styles['Normal']), f"Rs. {total_spent:,.2f}"],
-        [Paragraph("<b>Spending Limit</b>", styles['Normal']), f"Rs. {limit:,.2f}"],
+        [Paragraph("<b>Total Spending</b>", styles['Normal']), f"{symbol}{total_spent:,.2f}"],
+        [Paragraph("<b>Spending Limit</b>", styles['Normal']), f"{symbol}{limit:,.2f}"],
         [Paragraph("<b>Top Spending Category</b>", styles['Normal']), str(primary_cat)],
-        [Paragraph("<b>Average Ticket Size</b>", styles['Normal']), f"Rs. {avg_spend:,.2f}"],
+        [Paragraph("<b>Average Ticket Size</b>", styles['Normal']), f"{symbol}{avg_spend:,.2f}"],
         [Paragraph("<b>Total Transactions</b>", styles['Normal']), str(len(df))]
     ]
     
@@ -197,13 +261,13 @@ def generate_pdf_report(df, total_spent, primary_cat, limit, period_label):
     story.append(Spacer(1, 8))
 
     if not df.empty:
-        table_data = [["Date", "Description", "Category", "Amount (Rs.)"]]
+        table_data = [["Date", "Description", "Category", f"Amount ({symbol})"]]
         for _, row in df.iterrows():
             table_data.append([
                 str(row["Date"]),
                 str(row["Description"])[:30],
                 str(row["Category"]),
-                f"Rs. {row['Amount (₹)']:,.2f}"
+                f"{symbol}{row[amt_col_name]:,.2f}"
             ])
             
         t_ledger = Table(table_data, colWidths=[80, 220, 110, 90])
@@ -228,7 +292,7 @@ def generate_pdf_report(df, total_spent, primary_cat, limit, period_label):
 # BUDGET MODAL DIALOG
 # ========================================================
 @st.dialog("🎯 Budget & Savings Planner")
-def show_budget_modal():
+def show_budget_modal(symbol, rate):
     st.markdown(
         "<p style='color: #94a3b8; font-size: 0.9rem;'>Configure your monthly earnings to automatically calculate your recommended spending ceiling and savings target.</p>",
         unsafe_allow_html=True,
@@ -236,10 +300,10 @@ def show_budget_modal():
     st.markdown("<br>", unsafe_allow_html=True)
 
     monthly_income = st.number_input(
-        "Monthly Income (₹)",
+        f"Monthly Income ({symbol})",
         min_value=0.0,
-        value=st.session_state.get("popover_income", 30000.0),
-        step=1000.0,
+        value=st.session_state.get("popover_income", 30000.0 * rate),
+        step=1000.0 * rate,
         format="%.2f",
         key="popover_income",
     )
@@ -262,11 +326,11 @@ def show_budget_modal():
         <div style="background: rgba(30, 41, 59, 0.7); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Target Savings Goal ({savings_pct}%):</span>
-                <strong style="color: #a5b4fc; font-size: 0.95rem;">₹{target_savings:,.2f}</strong>
+                <strong style="color: #a5b4fc; font-size: 0.95rem;">{symbol}{target_savings:,.2f}</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Max Expense Ceiling:</span>
-                <strong style="color: #38bdf8; font-size: 0.95rem;">₹{spending_limit:,.2f}</strong>
+                <strong style="color: #38bdf8; font-size: 0.95rem;">{symbol}{spending_limit:,.2f}</strong>
             </div>
         </div>
         """,
@@ -294,7 +358,7 @@ if "popover_income" in st.session_state and "popover_savings" in st.session_stat
     monthly_income = st.session_state.popover_income
     savings_pct = st.session_state.popover_savings
 else:
-    monthly_income = 30000.0
+    monthly_income = 30000.0 * conversion_rate
     savings_pct = 20
 
 target_savings = monthly_income * (savings_pct / 100.0)
@@ -303,26 +367,25 @@ spending_limit = monthly_income - target_savings
 # ========================================================
 # DATA EXTRACTION LAYER (Oracle Integration)
 # ========================================================
-db_conn = st.session_state.db_instance
-
 try:
     raw_rows = db_conn.query_dicts(
-        "SELECT id, expense_date, description, amount, category FROM expenses ORDER BY expense_date DESC"
+        "SELECT ROWID, expense_date, description, amount, category FROM expenses ORDER BY expense_date DESC"
     )
 
     if raw_rows:
         ledger_df = pd.DataFrame(raw_rows)
-        ledger_df.columns = ["ROW_ID", "Date", "Description", "Amount (₹)", "Category"]
-        ledger_df["Amount (₹)"] = pd.to_numeric(ledger_df["Amount (₹)"])
+        ledger_df.columns = ["ROW_ID", "Date", "Description", f"Amount ({currency_symbol})", "Category"]
+        # Convert DB values (stored in base INR) to selected display currency
+        ledger_df[f"Amount ({currency_symbol})"] = pd.to_numeric(ledger_df[f"Amount ({currency_symbol})"]) * conversion_rate
         ledger_df["Date"] = ledger_df["Date"].astype(str)
     else:
         ledger_df = pd.DataFrame(
-            columns=["ROW_ID", "Date", "Description", "Amount (₹)", "Category"]
+            columns=["ROW_ID", "Date", "Description", f"Amount ({currency_symbol})", "Category"]
         )
 except Exception as e:
     st.error(f"Failed to fetch data from Oracle database: {e}")
     ledger_df = pd.DataFrame(
-        columns=["ROW_ID", "Date", "Description", "Amount (₹)", "Category"]
+        columns=["ROW_ID", "Date", "Description", f"Amount ({currency_symbol})", "Category"]
     )
 
 # Check daily logging status & show dismissible pill badge
@@ -424,7 +487,7 @@ with col1:
         )
 
     input_amount = st.number_input(
-        "Amount (₹)", min_value=0.0, step=1.0, format="%.2f"
+        f"Amount ({currency_symbol})", min_value=0.0, step=1.0, format="%.2f"
     )
 
     if st.button("Add Expense to Ledger", use_container_width=True, key="main_submit_btn"):
@@ -432,6 +495,8 @@ with col1:
             st.error("Please provide a valid description and amount.")
         else:
             try:
+                # Store normalized base amount in database (INR)
+                base_inr_amount = input_amount / conversion_rate
                 insert_query = (
                     "INSERT INTO expenses (expense_date, description, amount, category) "
                     "VALUES (TO_DATE(:1, 'YYYY-MM-DD'), :2, :3, :4)"
@@ -441,7 +506,7 @@ with col1:
                     {
                         "1": input_date.strftime("%Y-%m-%d"),
                         "2": input_desc.strip(),
-                        "3": input_amount,
+                        "3": base_inr_amount,
                         "4": preview_cat,
                     },
                 )
@@ -481,7 +546,7 @@ with col2:
 
     with ana_col3:
         if st.button("💰 Budget Targets", use_container_width=True, key="open_budget_btn"):
-            show_budget_modal()
+            show_budget_modal(currency_symbol, conversion_rate)
 
     # Filter ledger dataframe based on Date Selection
     filtered_analytics_df = ledger_df.copy()
@@ -499,7 +564,8 @@ with col2:
             thirty_days_ago = datetime.today() - timedelta(days=30)
             filtered_analytics_df = filtered_analytics_df[filtered_analytics_df["Date_DT"] >= thirty_days_ago]
 
-    total_spent = filtered_analytics_df["Amount (₹)"].sum() if not filtered_analytics_df.empty else 0.0
+    amt_col = f"Amount ({currency_symbol})"
+    total_spent = filtered_analytics_df[amt_col].sum() if not filtered_analytics_df.empty else 0.0
     primary_cat = (
         filtered_analytics_df["Category"].mode()[0]
         if not filtered_analytics_df.empty and not filtered_analytics_df["Category"].dropna().empty
@@ -510,13 +576,13 @@ with col2:
     if spending_limit > 0:
         budget_pct = min(total_spent / spending_limit, 1.0)
         st.markdown(
-            f"**Spending vs. Expense Limit ({date_filter}):** ₹{total_spent:,.2f} / ₹{spending_limit:,.2f}"
+            f"**Spending vs. Expense Limit ({date_filter}):** {currency_symbol}{total_spent:,.2f} / {currency_symbol}{spending_limit:,.2f}"
         )
         st.progress(budget_pct)
 
         if total_spent > spending_limit:
             st.warning(
-                f"⚠️ You've exceeded your monthly expense limit by ₹{total_spent - spending_limit:,.2f}! "
+                f"⚠️ You've exceeded your monthly expense limit by {currency_symbol}{total_spent - spending_limit:,.2f}! "
                 "This eats into your savings goal."
             )
     else:
@@ -528,15 +594,15 @@ with col2:
         unique_days = max(filtered_analytics_df["Date"].nunique(), 1)
         daily_burn = total_spent / unique_days
         
-        category_totals = filtered_analytics_df.groupby("Category")["Amount (₹)"].sum()
+        category_totals = filtered_analytics_df.groupby("Category")[amt_col].sum()
         max_cat_spend = category_totals.max() if not category_totals.empty else 0
         top_cat_name = category_totals.idxmax() if not category_totals.empty else ""
         cat_concentration = (max_cat_spend / total_spent) if total_spent > 0 else 0
 
         alert_msg = []
         if daily_burn > daily_threshold:
-            alert_msg.append(f"🔥 **High Pace:** Daily spend is **₹{daily_burn:,.2f}/day** (target max: ₹{daily_threshold:,.2f}/day).")
-        if cat_concentration > 0.5 and total_spent > 1000:
+            alert_msg.append(f"🔥 **High Pace:** Daily spend is **{currency_symbol}{daily_burn:,.2f}/day** (target max: {currency_symbol}{daily_threshold:,.2f}/day).")
+        if cat_concentration > 0.5 and total_spent > (1000 * conversion_rate):
             alert_msg.append(f"⚠️ **Concentration Risk:** **{top_cat_name}** consumes **{cat_concentration:.0%}** of your total spend!")
 
         if alert_msg:
@@ -551,7 +617,7 @@ with col2:
             unsafe_allow_html=True,
         )
         if st.button(
-            f"Total Spending\n\n₹{total_spent:,.2f}",
+            f"Total Spending\n\n{currency_symbol}{total_spent:,.2f}",
             key="card_spending",
             use_container_width=True,
             type="primary" if st.session_state.active_view == "Breakdown" else "secondary",
@@ -577,24 +643,24 @@ with col2:
     kpi1, kpi2 = st.columns(2)
 
     with kpi1:
-        avg_spend = filtered_analytics_df["Amount (₹)"].mean() if not filtered_analytics_df.empty else 0.0
+        avg_spend = filtered_analytics_df[amt_col].mean() if not filtered_analytics_df.empty else 0.0
         st.markdown(
             f"""
             <div style="background: rgba(15, 23, 42, 0.7); padding: 18px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); border-top: 3px solid #38bdf8;">
                 <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">⚡ Avg. Ticket</span><br>
-                <strong style="color: #f8fafc; font-size: 1.4rem; font-weight: 800;">₹{avg_spend:,.2f}</strong>
+                <strong style="color: #f8fafc; font-size: 1.4rem; font-weight: 800;">{currency_symbol}{avg_spend:,.2f}</strong>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
     with kpi2:
-        max_spend = filtered_analytics_df["Amount (₹)"].max() if not filtered_analytics_df.empty else 0.0
+        max_spend = filtered_analytics_df[amt_col].max() if not filtered_analytics_df.empty else 0.0
         st.markdown(
             f"""
             <div style="background: rgba(15, 23, 42, 0.7); padding: 18px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); border-top: 3px solid #f43f5e;">
                 <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">🔥 Largest Expense</span><br>
-                <strong style="color: #f8fafc; font-size: 1.4rem; font-weight: 800;">₹{max_spend:,.2f}</strong>
+                <strong style="color: #f8fafc; font-size: 1.4rem; font-weight: 800;">{currency_symbol}{max_spend:,.2f}</strong>
             </div>
             """,
             unsafe_allow_html=True,
@@ -609,7 +675,7 @@ with col2:
             st.markdown("#### Expense Category Distribution")
             fig_donut = px.pie(
                 filtered_analytics_df,
-                values="Amount (₹)",
+                values=amt_col,
                 names="Category",
                 hole=0.65,
                 color_discrete_sequence=px.colors.sequential.Darkmint_r,
@@ -626,12 +692,12 @@ with col2:
         elif st.session_state.active_view == "Velocity":
             st.markdown("#### Spending Timeline")
             trend_data = (
-                filtered_analytics_df.groupby("Date")["Amount (₹)"]
+                filtered_analytics_df.groupby("Date")[amt_col]
                 .sum()
                 .reset_index()
                 .sort_values("Date")
             )
-            fig_area = px.area(trend_data, x="Date", y="Amount (₹)", markers=True)
+            fig_area = px.area(trend_data, x="Date", y=amt_col, markers=True)
             fig_area.update_traces(
                 line_color="#818cf8", fillcolor="rgba(129, 140, 248, 0.15)"
             )
@@ -691,7 +757,7 @@ with col2:
     # PDF Report Generator Download Button
     with tbl_col4:
         pdf_data = generate_pdf_report(
-            export_excel_df, total_spent, primary_cat, spending_limit, date_filter
+            export_excel_df, total_spent, primary_cat, spending_limit, date_filter, currency_symbol
         )
         st.download_button(
             label="📄 PDF Report",
@@ -711,8 +777,8 @@ with col2:
         if not ledger_df.empty:
             ledger_df["Delete_Label"] = (
                 ledger_df["Date"] + " | " + 
-                ledger_df["Description"] + " (₹" + 
-                ledger_df["Amount (₹)"].astype(str) + ")"
+                ledger_df["Description"] + f" ({currency_symbol}" + 
+                ledger_df[amt_col].astype(str) + ")"
             )
             
             selected_tx = st.selectbox(
