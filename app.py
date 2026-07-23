@@ -480,18 +480,81 @@ with col2:
         if total_spent > spending_limit:
             st.warning(f"⚠️ Limit exceeded by {currency_symbol}{total_spent - spending_limit:,.2f}!")
 
+    # --------------------------------------------------------
+    # KPI Cards Section
+    # --------------------------------------------------------
     st.markdown("<br>", unsafe_allow_html=True)
-    kpi1, kpi2, kpi3 = st.columns(3)
 
     avg_spend = filtered_analytics_df[amt_col].mean() if not filtered_analytics_df.empty else 0.0
     max_spend = filtered_analytics_df[amt_col].max() if not filtered_analytics_df.empty else 0.0
 
-    with kpi1:
-        st.metric(label="Total Spent", value=f"{currency_symbol}{total_spent:,.2f}")
-    with kpi2:
-        st.metric(label="Avg Ticket Size", value=f"{currency_symbol}{avg_spend:,.2f}")
-    with kpi3:
-        st.metric(label="Largest Expense", value=f"{currency_symbol}{max_spend:,.2f}")
+    # Row 1: Proportional Breakdown & Trend Velocity
+    top_col1, top_col2 = st.columns(2)
+
+    with top_col1:
+        st.markdown(
+            '<span style="color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Proportional Breakdown</span>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"""
+            <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); 
+                        border-radius: 12px; padding: 18px; text-align: center; margin-top: 6px;">
+                <div style="color: #cbd5e1; font-size: 0.95rem; font-weight: 500;">Total Spending</div>
+                <div style="color: #ffffff; font-size: 1.25rem; font-weight: 700; margin-top: 4px;">{currency_symbol}{total_spent:,.2f}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with top_col2:
+        st.markdown(
+            '<span style="color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Trend Velocity</span>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"""
+            <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); 
+                        border-radius: 12px; padding: 18px; text-align: center; margin-top: 6px;">
+                <div style="color: #cbd5e1; font-size: 0.95rem; font-weight: 500;">Top Category</div>
+                <div style="color: #ffffff; font-size: 1.1rem; font-weight: 700; margin-top: 4px;">{primary_cat}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Row 2: Highlighted Cards
+    bot_col1, bot_col2 = st.columns(2)
+
+    with bot_col1:
+        st.markdown(
+            f"""
+            <div style="background: rgba(15, 23, 42, 0.65); border: 2px solid #38bdf8; 
+                        border-radius: 12px; padding: 18px; margin-top: 6px;">
+                <div style="color: #cbd5e1; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                    ⚡ AVG. TICKET
+                </div>
+                <div style="color: #ffffff; font-size: 1.5rem; font-weight: 800; margin-top: 8px;">{currency_symbol}{avg_spend:,.2f}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with bot_col2:
+        st.markdown(
+            f"""
+            <div style="background: rgba(15, 23, 42, 0.65); border: 2px solid #f43f5e; 
+                        border-radius: 12px; padding: 18px; margin-top: 6px;">
+                <div style="color: #cbd5e1; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                    🔥 LARGEST EXPENSE
+                </div>
+                <div style="color: #ffffff; font-size: 1.5rem; font-weight: 800; margin-top: 8px;">{currency_symbol}{max_spend:,.2f}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.markdown("---")
 
