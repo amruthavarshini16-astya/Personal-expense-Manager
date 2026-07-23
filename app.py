@@ -30,11 +30,11 @@ st.set_page_config(
     page_title="Personal Expense Manager",
     page_icon="💳",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # ========================================================
-# FEATURE 1: MULTI-CURRENCY CONVERTER CONFIGURATION
+# CURRENCY CONFIGURATION
 # ========================================================
 currency_options = {
     "INR (₹)": {"symbol": "₹", "rate": 1.0},
@@ -42,55 +42,12 @@ currency_options = {
     "EUR (€)": {"symbol": "€", "rate": 0.011}
 }
 
-st.sidebar.markdown("## 💱 Settings & Currency")
-selected_currency_key = st.sidebar.selectbox(
-    "Active Display Currency",
-    options=list(currency_options.keys()),
-    index=0
-)
-
+# Default display currency parameters
+selected_currency_key = "INR (₹)"
 currency_symbol = currency_options[selected_currency_key]["symbol"]
 conversion_rate = currency_options[selected_currency_key]["rate"]
 
-st.sidebar.markdown("---")
-
-# ========================================================
-# FEATURE 3: RECURRING MONTHLY EXPENSES TRACKER
-# ========================================================
-st.sidebar.markdown("### 📅 Quick Log Bills")
-st.sidebar.caption("Click to record fixed expenses instantly:")
-
-recurring_items = [
-    {"name": "House Rent", "amount": 5000.00, "category": "Bills & Utilities"},
-    {"name": "WiFi / Internet", "amount": 799.00, "category": "Bills & Utilities"},
-    {"name": "Netflix", "amount": 199.00, "category": "Entertainment"}
-]
-
 db_conn = st.session_state.db_instance
-
-for item in recurring_items:
-    converted_amt = item["amount"] * conversion_rate
-    if st.sidebar.button(f"➕ {item['name']} ({currency_symbol}{converted_amt:,.2f})", use_container_width=True):
-        try:
-            insert_query = (
-                "INSERT INTO expenses (expense_date, description, amount, category) "
-                "VALUES (TO_DATE(:1, 'YYYY-MM-DD'), :2, :3, :4)"
-            )
-            db_conn.execute(
-                insert_query,
-                {
-                    "1": date.today().strftime("%Y-%m-%d"),
-                    "2": item["name"],
-                    "3": item["amount"],
-                    "4": item["category"],
-                },
-            )
-            st.sidebar.success(f"Logged {item['name']}!")
-            st.rerun()
-        except Exception as ex:
-            st.sidebar.error(f"Error: {ex}")
-
-st.sidebar.markdown("---")
 
 # 3. Modern SaaS Glassmorphism CSS styling
 custom_css = """
@@ -99,6 +56,11 @@ custom_css = """
 
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Hide Sidebar Navigation completely */
+    [data-testid="stSidebar"] {
+        display: none !important;
     }
 
     /* Dark Slate Background */
@@ -434,7 +396,7 @@ with col1:
         log_currency = st.selectbox(
             "Currency",
             options=list(currency_options.keys()),
-            index=list(currency_options.keys()).index(selected_currency_key) if selected_currency_key in currency_options else 0,
+            index=0,
             key="log_transaction_currency"
         )
 
