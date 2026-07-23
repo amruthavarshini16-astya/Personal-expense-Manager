@@ -307,7 +307,7 @@ db_conn = st.session_state.db_instance
 
 try:
     raw_rows = db_conn.query_dicts(
-        "SELECT ROWID, expense_date, description, amount, category FROM expenses ORDER BY expense_date DESC"
+        "SELECT id, expense_date, description, amount, category FROM expenses ORDER BY expense_date DESC"
     )
 
     if raw_rows:
