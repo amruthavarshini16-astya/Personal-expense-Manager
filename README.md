@@ -1,14 +1,19 @@
-# Personal Expense Manager 💰
+# 💰 Personal Expense Manager
 
-A modular Python application powered by Streamlit, Natural Language Processing (spaCy), Plotly analytics, and Supabase PostgreSQL.
+An intelligent, NLP-driven personal expense and financial tracking application built using Python, Streamlit, and PostgreSQL (Supabase).
 
-## Features
-- **Expense Logging:** Track daily expenses with categorical metadata.
-- **NLP Parsing:** Process expenditure descriptions automatically.
-- **Analytics & Visualizations:** Interactive charts powered by Plotly.
-- **Cloud Database Integration:** Live backend synced with Supabase PostgreSQL.
+🚀 **[Live App Demo](https://personal-expense-manager-ljp5tdqujrzqjzwlq6l53x.streamlit.app)**
 
-## Setup & Running Locally
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+---
+
+## 🌟 Key Features
+* **Natural Language Processing:** Input daily expenses in plain English.
+* **Interactive Analytics:** View real-time spending breakdowns, trend velocity, and monthly limit alerts.
+* **Cloud Database:** Powered by PostgreSQL hosted on Supabase.
+
+---
+
+## 🛠️ Tech Stack
+* **Frontend:** Streamlit
+* **Database:** PostgreSQL (Supabase)
+* **Backend:** Python 3.11
