@@ -2,7 +2,7 @@
 
 An intelligent, NLP-driven personal expense and financial tracking application built using Python, Streamlit, and PostgreSQL (Supabase).
 
-🚀 **[Live App Demo](https://personal-expense-manager-ljp5tdqujrzqjzwlq6l53x.streamlit.app)**
+🚀 **[Live App Demo](https://8s5slkkvev64agcebzsnri.streamlit.app/)**
 
 ---
 
