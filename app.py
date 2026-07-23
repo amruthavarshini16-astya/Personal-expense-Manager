@@ -333,10 +333,9 @@ target_savings = monthly_income * (savings_pct / 100.0)
 spending_limit = monthly_income - target_savings
 
 # ========================================================
-# DATA EXTRACTION LAYER (PostgreSQL / General SQL Fix)
+# DATA EXTRACTION LAYER
 # ========================================================
 try:
-    # Use standard column selection without Oracle-specific ROWID
     raw_rows = db_conn.query_dicts(
         "SELECT expense_date, description, amount, category FROM expenses ORDER BY expense_date DESC"
     )
@@ -422,14 +421,34 @@ with col1:
             unsafe_allow_html=True,
         )
 
-    input_amount = st.number_input(f"Amount ({currency_symbol})", min_value=0.0, step=1.0, format="%.2f")
+    # --- MULTI-CURRENCY LOGGING INPUT ---
+    amt_col1, amt_col2 = st.columns([2, 1])
+    with amt_col1:
+        input_amount = st.number_input(
+            "Amount",
+            min_value=0.0,
+            step=1.0,
+            format="%.2f"
+        )
+    with amt_col2:
+        log_currency = st.selectbox(
+            "Currency",
+            options=list(currency_options.keys()),
+            index=list(currency_options.keys()).index(selected_currency_key) if selected_currency_key in currency_options else 0,
+            key="log_transaction_currency"
+        )
+
+    # Get rate for selected transaction currency
+    input_currency_rate = currency_options[log_currency]["rate"]
 
     if st.button("Add Expense to Ledger", use_container_width=True, key="main_submit_btn"):
         if not input_desc or input_amount <= 0:
             st.error("Please provide a valid description and amount.")
         else:
             try:
-                base_inr_amount = input_amount / conversion_rate
+                # Convert entered amount to base currency (INR) before storing
+                base_inr_amount = input_amount / input_currency_rate
+                
                 insert_query = (
                     "INSERT INTO expenses (expense_date, description, amount, category) "
                     "VALUES (:1, :2, :3, :4)"
@@ -443,7 +462,7 @@ with col1:
                         "4": preview_cat,
                     },
                 )
-                st.success(f"Transaction recorded under {preview_cat}")
+                st.success(f"Recorded {currency_options[log_currency]['symbol']}{input_amount:,.2f} under {preview_cat}!")
                 st.rerun()
             except Exception as ex:
                 st.error(f"Database write error: {ex}")
