@@ -359,7 +359,7 @@ with col1:
     st.markdown("### Log Transaction")
 
     input_date = st.date_input("Transaction Date", value=datetime.today())
-    input_desc = st.text_input("Description", placeholder="e.g., curd packet")
+    input_desc = st.text_input("Description", placeholder="e.g., Snacks")
 
     preview_cat = "Miscellaneous"
 
