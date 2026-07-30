@@ -93,7 +93,7 @@
       <div class="hero-feature-pills">
         <span class="feature-pill-item">🛡️ Autonomous Budget Guardian</span>
         <span class="feature-pill-item">🌸 Living Flower Pot Avatars</span>
-        <span class="feature-pill-item">⚡ Microsecond Telemetry</span>
+        <span class="feature-pill-item">⚡ Microsecond System Telemetry</span>
         <span class="feature-pill-item">🇮🇳 ₹ INR / $ USD Currency Engine</span>
       </div>
     </div>
@@ -145,7 +145,7 @@
 
         <div class="glass-card metric-card primary-glow clickable-card" onclick="switchNavTab('runway')">
           <div class="metric-header">
-            <span class="metric-title">Predictive Runway</span>
+            <span class="metric-title">Predictive Runway (Days Left)</span>
             <span class="metric-icon">⏱️</span>
           </div>
           <div id="metric-runway-days" class="metric-value highlight">0 <span class="unit">Days</span></div>
@@ -156,7 +156,7 @@
 
         <div class="glass-card metric-card clickable-card" onclick="openMetricModal('budget')">
           <div class="metric-header">
-            <span class="metric-title">Safe Daily Spending</span>
+            <span class="metric-title">Safe Daily Budget Limit</span>
             <span class="metric-icon">🛡️</span>
           </div>
           <div id="metric-safe-daily" class="metric-value">₹0.00 <span class="unit">/day</span></div>
@@ -219,13 +219,14 @@
         </div>
       </div>
 
-      <!-- Explanation Box -->
+      <!-- Human-Friendly Guide Box -->
       <div class="explanation-box">
-        <div class="exp-icon">📘</div>
+        <div class="exp-icon">💡</div>
         <div class="exp-content">
-          <h4>What is the Overview Dashboard?</h4>
+          <h4>What are Cash Runway & Emergency Shock Recovery?</h4>
           <p>
-            The Overview screen gives you a high-level real-time summary of your <strong>Available Cushion</strong>, <strong>Predictive Runway Days</strong>, and <strong>Safe Daily Budget Limit</strong>. Click the <strong>⏱️ Predictive Runway</strong> card or tab to view detailed trajectory charts!
+            • <strong>⏱️ Cash Runway:</strong> Answers <em>"How many days will my money last at my current spending speed?"</em><br>
+            • <strong>🛡️ Shock Recovery:</strong> If a sudden emergency bill happens (like a laptop repair or medical bill), it spreads the cost over 7, 15, or 30 days so your daily pocket money stays completely safe!
           </p>
         </div>
       </div>
@@ -237,28 +238,39 @@
       <div class="glass-card runway-predictor-card">
         <div class="card-header">
           <div>
-            <h3>⏱️ Cash Runway Predictor</h3>
-            <span id="runway-radar-subtitle" class="sub-label">AI Cash Projection Engine</span>
+            <h3>⏱️ Cash Runway Predictor (Days Money Will Last)</h3>
+            <span id="runway-radar-subtitle" class="sub-label">Predicts how many days your cash lasts before reaching ₹0</span>
           </div>
           <div class="chart-header-badges">
-            <span class="badge-tag glow-cyan">Interactive Visualizer</span>
+            <span class="badge-tag glow-cyan">Interactive Trajectory</span>
             <span id="runway-model-fit-pill" class="badge-tag glow-purple">Accuracy: 94%</span>
           </div>
         </div>
 
-        <div class="scenario-bar">
+        <!-- Beginner-Friendly Explanation Card -->
+        <div class="copilot-guide-card" style="margin-top: 6px;">
+          <h5>💡 How to Read the Runway Graph:</h5>
+          <ul>
+            <li><strong>Line slope shows spending speed:</strong> Steeper line means money is running out faster.</li>
+            <li><strong>🟢 Green Zone (>90 Days):</strong> Healthy cash cushion.</li>
+            <li><strong>🟡 Yellow Zone (30–90 Days):</strong> Watch non-essential extra expenses.</li>
+            <li><strong>🔴 Red Zone (<30 Days):</strong> Money running low — adjust daily spend.</li>
+          </ul>
+        </div>
+
+        <div class="scenario-bar" style="margin-top: 10px;">
           <span class="scenario-title">Try What-If Scenarios:</span>
           <div class="scenario-btn-group">
             <button id="runway-scen-baseline" class="btn-scenario active" onclick="applyRunwayPageScenario('baseline')">📊 Normal Spending</button>
-            <button id="runway-scen-trim25" class="btn-scenario" onclick="applyRunwayPageScenario('trim25')">✂️ Cut Extra Expenses</button>
+            <button id="runway-scen-trim25" class="btn-scenario" onclick="applyRunwayPageScenario('trim25')">✂️ Cut Extra Expenses (-25%)</button>
             <button id="runway-scen-sidehustle" class="btn-scenario" onclick="applyRunwayPageScenario('sidehustle')">🚀 Add Extra Income</button>
-            <button id="runway-scen-shock" class="btn-scenario" onclick="applyRunwayPageScenario('shock')">💥 Unexpected Emergency</button>
+            <button id="runway-scen-shock" class="btn-scenario" onclick="applyRunwayPageScenario('shock')">💥 Emergency Bill</button>
           </div>
         </div>
 
         <div class="runway-slider-card">
           <div class="slider-header-row">
-            <span class="slider-title">🎯 Set Your Target Goal:</span>
+            <span class="slider-title">🎯 Set Your Target Cash Goal:</span>
             <span id="slider-target-val" class="slider-val-highlight">120 Days</span>
           </div>
           <input type="range" id="target-runway-slider" min="30" max="240" step="5" value="120" oninput="handleRunwaySlider(this.value)">
@@ -314,8 +326,8 @@
             <text id="radar-mid-label" x="440" y="285" class="svg-axis-label">Day 45</text>
             <text id="radar-end-label" x="780" y="285" class="svg-axis-label red">Money Runs Out</text>
 
-            <text id="radar-max-val" x="10" y="44" class="svg-axis-label">Max</text>
-            <text id="radar-min-val" x="15" y="264" class="svg-axis-label red">0</text>
+            <text x="10" y="44" class="svg-axis-label">Max</text>
+            <text x="15" y="264" class="svg-axis-label red">0</text>
           </svg>
         </div>
 
@@ -336,16 +348,6 @@
             <span class="stat-lbl">Forecast Model</span>
             <span id="runway-page-eq" class="stat-val mono">y = mx + c</span>
           </div>
-        </div>
-      </div>
-
-      <div class="explanation-box">
-        <div class="exp-icon">📘</div>
-        <div class="exp-content">
-          <h4>How does the Cash Runway Predictor work?</h4>
-          <p>
-            The predictor calculates your average daily spending rate and compares it with your bank cushion to project exactly when your money will run out. Try the buttons or slider above to see how small changes add extra months to your runway!
-          </p>
         </div>
       </div>
     </section>
@@ -408,16 +410,6 @@
           </div>
         </div>
       </div>
-
-      <div class="explanation-box">
-        <div class="exp-icon">📘</div>
-        <div class="exp-content">
-          <h4>How does the Zero-Dependency NLP Tagger work?</h4>
-          <p>
-            The real-time tagger parses merchant descriptions (e.g. <em>"Curd"</em>, <em>"Swiggy Biryani"</em>, <em>"Uber Ride"</em>) into word tokens and uses high-speed set matching to automatically assign categories without needing slow cloud AI.
-          </p>
-        </div>
-      </div>
     </section>
 
 
@@ -433,8 +425,8 @@
         <div class="copilot-guide-card" style="margin-top: 8px;">
           <h5>💡 How Shock Recovery Protects Your Money:</h5>
           <ul>
-            <li><strong>What is a Capital Shock?</strong> An unexpected large bill (like a hospital emergency, car breakdown, or laptop repair).</li>
-            <li><strong>Why do we need Recovery?</strong> Instead of draining your bank balance to zero in 1 day, Resilient Pocket spreads the bill over 7, 15, or 30 days so your daily pocket budget stays completely safe!</li>
+            <li><strong>What is an Emergency Shock?</strong> An unexpected large bill (like a hospital emergency, car repair, or laptop breakdown).</li>
+            <li><strong>Why do we need Recovery?</strong> Instead of draining your bank balance in 1 day, Resilient Pocket spreads the bill over 7, 15, or 30 days so your daily pocket money stays completely safe!</li>
           </ul>
         </div>
 
@@ -590,16 +582,6 @@
             <span class="ring-sub">Daily Spend Volatility</span>
           </div>
 
-        </div>
-      </div>
-
-      <div class="explanation-box">
-        <div class="exp-icon">📘</div>
-        <div class="exp-content">
-          <h4>How do Flower Pot Financial Avatars work?</h4>
-          <p>
-            Your living flower pot reflects your financial health score (0–100). As your cash runway grows or shrinks, your flower shifts between <strong>Blooming Blossom 🌸</strong>, <strong>Healthy Sunflower 🌻</strong>, <strong>Drooping Petals 🥀</strong>, and <strong>Withered Rescue 🏜️</strong>!
-          </p>
         </div>
       </div>
     </section>
