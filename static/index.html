@@ -17,7 +17,7 @@
   <!-- Fullscreen Interactive Math & Physics Background Canvas -->
   <canvas id="bg-canvas"></canvas>
 
-  <!-- Clean, Uncluttered Top Glass Navbar -->
+  <!-- Sleek, Uncluttered Top Glass Navbar -->
   <header class="navbar">
     <div class="brand">
       <div class="brand-icon-box" title="RESILIENT POCKET">
@@ -32,24 +32,24 @@
     <!-- Clean Central Navigation Tabs -->
     <nav class="nav-tabs">
       <button class="nav-link active" onclick="switchNavTab('overview')">🏠 Overview</button>
-      <button class="nav-link" onclick="switchNavTab('runway')">⏱️ Runway Predictor</button>
+      <button class="nav-link" onclick="switchNavTab('runway')">⏱️ Runway</button>
       <button class="nav-link" onclick="switchNavTab('transactions')">⚡ Transactions</button>
       <button class="nav-link" onclick="switchNavTab('shocks')">🛡️ Shock Recovery</button>
-      <button class="nav-link" onclick="switchNavTab('health')">🌸 Flower Pot Mood</button>
+      <button class="nav-link" onclick="switchNavTab('health')">🌸 Flower Mood</button>
       <button class="nav-link" onclick="switchNavTab('telemetry')">⚡ Telemetry</button>
     </nav>
 
     <div class="header-right">
       <!-- Currency Switcher: ₹ INR vs $ USD -->
       <div class="currency-toggle-group">
-        <button id="curr-btn-inr" class="curr-tab active" onclick="switchCurrency('INR')">🇮🇳 ₹ INR</button>
-        <button id="curr-btn-usd" class="curr-tab" onclick="switchCurrency('USD')">🇺🇸 $ USD</button>
+        <button id="curr-btn-inr" class="curr-tab active" onclick="switchCurrency('INR')">₹ INR</button>
+        <button id="curr-btn-usd" class="curr-tab" onclick="switchCurrency('USD')">$ USD</button>
       </div>
 
       <!-- Phone Push Notification Toggle Button -->
-      <button id="btn-phone-notify" class="btn-phone-notify" onclick="requestPhoneNotificationPermission()">
+      <button id="btn-phone-notify" class="btn-phone-notify" onclick="requestPhoneNotificationPermission()" title="Enable Daily Reminders">
         <span class="notify-icon">🔔</span>
-        <span>Phone Popups</span>
+        <span>Reminders</span>
       </button>
 
       <!-- Mode Switcher Tabs -->
@@ -58,11 +58,11 @@
         <button id="mode-btn-real" class="mode-tab" onclick="switchToRealMode()">👤 My Money</button>
       </div>
 
-      <!-- Financial Health Badge -->
+      <!-- Financial Health Badge (Compact Pill) -->
       <div id="health-badge" class="health-badge" onclick="switchNavTab('health')" style="cursor: pointer;">
         <span id="health-emoji">🌸</span>
-        <span id="health-state">Blooming Blossom</span>
-        <span id="health-score" class="score-pill">85.0</span>
+        <span id="health-state">Blooming</span>
+        <span id="health-score" class="score-pill">98.5</span>
       </div>
     </div>
   </header>
@@ -81,19 +81,19 @@
 
   <main class="dashboard-container">
 
-    <!-- 🚀 UNIQUE SPECIAL HOLOGRAPHIC HERO TITLE SECTION -->
+    <!-- 🚀 SLEEK & COMPACT HERO TITLE SECTION -->
     <div class="hero-header-banner">
       <div class="hero-badge-tag">
         <span class="pulse-dot" style="background:#38bdf8;"></span>
         <span>NEXT-GEN AI CASH COPILOT</span>
       </div>
       <h1 class="hero-app-title">RESILIENT POCKET</h1>
-      <p class="hero-app-subtitle">Autonomous Cash Cushion Guardian, Predictive OLS Runway Projection Engine & Amortized Deficit Recovery System</p>
+      <p class="hero-app-subtitle">Autonomous Cash Cushion Guardian & Predictive OLS Runway Projection Engine</p>
       
       <div class="hero-feature-pills">
         <span class="feature-pill-item">🛡️ Autonomous Budget Guardian</span>
-        <span class="feature-pill-item">🌸 Living Flower Pot Mood Avatars</span>
-        <span class="feature-pill-item">⚡ Microsecond System Telemetry</span>
+        <span class="feature-pill-item">🌸 Living Flower Pot Avatars</span>
+        <span class="feature-pill-item">⚡ Microsecond Telemetry</span>
         <span class="feature-pill-item">🇮🇳 ₹ INR / $ USD Currency Engine</span>
       </div>
     </div>
@@ -167,7 +167,7 @@
       </div>
 
       <!-- Main Overview Grid -->
-      <div class="main-grid" style="margin-top: 20px;">
+      <div class="main-grid" style="margin-top: 16px;">
         <!-- Left Column: Quick Transaction Form -->
         <div class="glass-card">
           <div class="card-header">
@@ -319,7 +319,7 @@
           </svg>
         </div>
 
-        <div class="runway-details-grid" style="margin-top: 24px;">
+        <div class="runway-details-grid" style="margin-top: 20px;">
           <div class="runway-stat-box primary-glow">
             <span class="stat-lbl">Daily Spending Pace</span>
             <span id="runway-page-burn" class="stat-val">₹0.00 / day</span>
@@ -430,7 +430,7 @@
         </div>
 
         <!-- Super Simple Human Explanation Box -->
-        <div class="copilot-guide-card" style="margin-top: 10px;">
+        <div class="copilot-guide-card" style="margin-top: 8px;">
           <h5>💡 How Shock Recovery Protects Your Money:</h5>
           <ul>
             <li><strong>What is a Capital Shock?</strong> An unexpected large bill (like a hospital emergency, car breakdown, or laptop repair).</li>
@@ -438,13 +438,13 @@
           </ul>
         </div>
 
-        <div id="shock-page-status" class="shock-page-box" style="margin-top: 16px;">
+        <div id="shock-page-status" class="shock-page-box" style="margin-top: 14px;">
           <h4>Status: <span id="shock-status-txt">Normal Operations</span></h4>
           <p id="shock-status-desc">No active shock deficit detected. Daily budget allowance is running at normal baseline.</p>
         </div>
 
         <!-- Visual Amortization Recovery Pace Selector -->
-        <h4 style="margin: 20px 0 10px;">⚡ Choose Your Recovery Pace:</h4>
+        <h4 style="margin: 16px 0 8px;">⚡ Choose Your Recovery Pace:</h4>
         <div class="shock-visualizer-grid">
           
           <div class="pace-card" onclick="setShockRecovery(7)">
@@ -476,13 +476,13 @@
 
         </div>
 
-        <div class="sim-shock-card" style="margin-top:24px;">
+        <div class="sim-shock-card" style="margin-top:20px;">
           <h4>💥 Test Capital Shock Simulation</h4>
           <p>Simulate an unexpected large expense (e.g. Laptop Repair or Medical Bill) to see how your daily budget limit adjusts.</p>
-          <div class="form-row" style="margin-top: 12px;">
+          <div class="form-row" style="margin-top: 10px;">
             <input type="text" id="sim-shock-desc" placeholder="Emergency Description (e.g. Medical Bill)" style="flex:2;">
             <input type="number" id="sim-shock-amount" placeholder="Amount (e.g. 15000)" style="flex:1;">
-            <button type="button" class="btn-submit" style="width:auto; padding:10px 20px;" onclick="simulateCapitalShock()">Trigger Shock</button>
+            <button type="button" class="btn-submit" style="width:auto; padding:8px 16px;" onclick="simulateCapitalShock()">Trigger Shock</button>
           </div>
         </div>
       </div>
@@ -525,12 +525,12 @@
         </div>
 
         <!-- Main Flower Pot Banner with Active Flower Mood SVG -->
-        <div class="health-overview-banner" style="margin-top: 20px;">
+        <div class="health-overview-banner" style="margin-top: 16px;">
           <div class="health-main-score">
             <img id="hero-flower-mood-img" src="flower-blooming.svg" alt="Flower Mood Avatar" class="hero-flower-mood-img">
             <div>
               <h2 id="health-page-state">Blooming Blossom Flower 🌸</h2>
-              <span id="health-page-score" class="score-display">Score: 85.0 / 100</span>
+              <span id="health-page-score" class="score-display">Score: 98.5 / 100</span>
             </div>
           </div>
           <div id="health-page-prompt" class="health-prompt-text">
@@ -539,7 +539,7 @@
         </div>
 
         <!-- 4 Pillar Circular Gauge Rings -->
-        <h4 style="margin: 24px 0 14px;">📊 4 Financial Pillar Gauges</h4>
+        <h4 style="margin: 20px 0 12px;">📊 4 Financial Pillar Gauges</h4>
         <div class="rings-grid">
           
           <div class="glass-card ring-card">
@@ -551,7 +551,7 @@
               <div id="pillar-cushion" class="ring-value">95.6</div>
             </div>
             <span class="ring-title">1. Cushion Ratio (35%)</span>
-            <span class="ring-sub">Reserve Cushion vs 3-Mo Target</span>
+            <span class="ring-sub">Reserve Cushion vs Target</span>
           </div>
 
           <div class="glass-card ring-card">
@@ -575,7 +575,7 @@
               <div id="pillar-shock" class="ring-value">100</div>
             </div>
             <span class="ring-title">3. Shock Severity (15%)</span>
-            <span class="ring-sub">Active Shock Deficit Deduction</span>
+            <span class="ring-sub">Active Shock Deduction</span>
           </div>
 
           <div class="glass-card ring-card">
@@ -587,7 +587,7 @@
               <div id="pillar-stability" class="ring-value">90.0</div>
             </div>
             <span class="ring-title">4. Spending Stability (15%)</span>
-            <span class="ring-sub">Daily Spend Volatility Index</span>
+            <span class="ring-sub">Daily Spend Volatility</span>
           </div>
 
         </div>
@@ -628,7 +628,7 @@
           </div>
         </div>
 
-        <div class="telemetry-log-table" style="max-height: 380px;">
+        <div class="telemetry-log-table" style="max-height: 360px;">
           <table class="data-table">
             <thead>
               <tr>
@@ -679,8 +679,8 @@
   <div id="ai-copilot-drawer" class="ai-copilot-drawer hidden">
     <div class="drawer-header">
       <div class="drawer-title">
-        <div class="brand-icon-box" style="width:32px; height:32px; border-radius:8px;">
-          <svg viewBox="0 0 24 24" style="width:18px; height:18px;">
+        <div class="brand-icon-box" style="width:30px; height:30px; border-radius:8px;">
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px;">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>

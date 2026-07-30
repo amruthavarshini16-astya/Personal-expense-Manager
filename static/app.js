@@ -162,7 +162,8 @@ function renderDashboard(data) {
   }
   const badge = document.getElementById("health-badge");
   document.getElementById("health-emoji").textContent = health.emoji || "🌸";
-  document.getElementById("health-state").textContent = health.character_name || health.state;
+  const rawState = health.character_name || health.state || "Blooming";
+  document.getElementById("health-state").textContent = rawState.split(" ")[0];
   document.getElementById("health-score").textContent = health.score;
 
   badge.style.backgroundColor = health.badge_color + "25";
