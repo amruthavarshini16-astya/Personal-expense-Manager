@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Terracotta Flower Pot -->
+  <path d="M 30 62 L 35 90 L 65 90 L 70 62 Z" fill="#94a3b8" stroke="#0f172a" stroke-width="2"/>
+  <rect x="26" y="54" width="48" height="10" rx="3" fill="#64748b" stroke="#0f172a" stroke-width="2"/>
+  <!-- Pot Face (Sad Rescue) -->
+  <line x1="40" y1="72" x2="46" y2="76" stroke="#0f172a" stroke-width="2"/>
+  <line x1="46" y1="72" x2="40" y2="76" stroke="#0f172a" stroke-width="2"/>
+  <line x1="54" y1="72" x2="60" y2="76" stroke="#0f172a" stroke-width="2"/>
+  <line x1="60" y1="72" x2="54" y2="76" stroke="#0f172a" stroke-width="2"/>
+  <ellipse cx="50" cy="82" rx="4" ry="2" fill="#ef4444"/>
+  <!-- Withered Cactus Plant Body -->
+  <path d="M 44 54 C 42 34 58 34 56 54 Z" fill="#ef4444" stroke="#0f172a" stroke-width="2"/>
+  <path d="M 36 44 Q 30 40 32 48 Q 42 50 42 44" fill="#f59e0b" stroke="#0f172a" stroke-width="1.5"/>
+  <!-- Thorns -->
+  <line x1="40" y1="42" x2="36" y2="40" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="60" y1="42" x2="64" y2="40" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="42" y1="48" x2="38" y2="48" stroke="#0f172a" stroke-width="1.5"/>
+  <!-- SOS Alert Badge -->
+  <circle cx="50" cy="22" r="12" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+  <text x="50" y="26" font-size="10" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="sans-serif">SOS</text>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Terracotta Flower Pot -->
+  <path d="M 30 62 L 35 90 L 65 90 L 70 62 Z" fill="#e07a5f" stroke="#0f172a" stroke-width="2"/>
+  <rect x="26" y="54" width="48" height="10" rx="3" fill="#f4a261" stroke="#0f172a" stroke-width="2"/>
+  <!-- Pot Face -->
+  <circle cx="43" cy="74" r="2.5" fill="#0f172a"/>
+  <circle cx="57" cy="74" r="2.5" fill="#0f172a"/>
+  <path d="M 47 80 Q 50 83 53 80" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+  <!-- Green Stem & Leaves -->
+  <path d="M 50 54 Q 52 38 50 28" fill="none" stroke="#10b981" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M 48 44 Q 32 40 38 48 Q 48 48 48 44" fill="#10b981" stroke="#0f172a" stroke-width="1.5"/>
+  <path d="M 52 38 Q 68 34 62 42 Q 52 42 52 38" fill="#10b981" stroke="#0f172a" stroke-width="1.5"/>
+  <!-- Sunflower Petals -->
+  <ellipse cx="50" cy="12" rx="5" ry="10" fill="#f59e0b"/>
+  <ellipse cx="50" cy="40" rx="5" ry="10" fill="#f59e0b"/>
+  <ellipse cx="36" cy="26" rx="10" ry="5" fill="#f59e0b"/>
+  <ellipse cx="64" cy="26" rx="10" ry="5" fill="#f59e0b"/>
+  <ellipse cx="40" cy="16" rx="6" ry="9" fill="#fbbf24" transform="rotate(-45 40 16)"/>
+  <ellipse cx="60" cy="16" rx="6" ry="9" fill="#fbbf24" transform="rotate(45 60 16)"/>
+  <ellipse cx="40" cy="36" rx="6" ry="9" fill="#fbbf24" transform="rotate(45 40 36)"/>
+  <ellipse cx="60" cy="36" rx="6" ry="9" fill="#fbbf24" transform="rotate(-45 60 36)"/>
+  <!-- Sunflower Center Face -->
+  <circle cx="50" cy="26" r="11" fill="#78350f" stroke="#0f172a" stroke-width="2"/>
+  <circle cx="46" cy="24" r="1.8" fill="#ffffff"/>
+  <circle cx="54" cy="24" r="1.8" fill="#ffffff"/>
+  <path d="M 46 28 Q 50 32 54 28" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

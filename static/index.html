@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RESILIENT POCKET — AI Financial Risk & Cash Copilot</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Fullscreen Interactive Math & Physics Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Clean, Uncluttered Top Glass Navbar -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon-box" title="RESILIENT POCKET">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 8v8"/>
+          <path d="M8 12h8"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Clean Central Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-link active" onclick="switchNavTab('overview')">🏠 Overview</button>
+      <button class="nav-link" onclick="switchNavTab('runway')">⏱️ Runway Predictor</button>
+      <button class="nav-link" onclick="switchNavTab('transactions')">⚡ Transactions</button>
+      <button class="nav-link" onclick="switchNavTab('shocks')">🛡️ Shock Recovery</button>
+      <button class="nav-link" onclick="switchNavTab('health')">🌸 Flower Pot Mood</button>
+      <button class="nav-link" onclick="switchNavTab('telemetry')">⚡ Telemetry</button>
+    </nav>
+
+    <div class="header-right">
+      <!-- Currency Switcher: ₹ INR vs $ USD -->
+      <div class="currency-toggle-group">
+        <button id="curr-btn-inr" class="curr-tab active" onclick="switchCurrency('INR')">🇮🇳 ₹ INR</button>
+        <button id="curr-btn-usd" class="curr-tab" onclick="switchCurrency('USD')">🇺🇸 $ USD</button>
+      </div>
+
+      <!-- Phone Push Notification Toggle Button -->
+      <button id="btn-phone-notify" class="btn-phone-notify" onclick="requestPhoneNotificationPermission()">
+        <span class="notify-icon">🔔</span>
+        <span>Phone Popups</span>
+      </button>
+
+      <!-- Mode Switcher Tabs -->
+      <div class="mode-toggle-group">
+        <button id="mode-btn-demo" class="mode-tab active" onclick="switchToDemoMode()">🧪 Demo</button>
+        <button id="mode-btn-real" class="mode-tab" onclick="switchToRealMode()">👤 My Money</button>
+      </div>
+
+      <!-- Financial Health Badge -->
+      <div id="health-badge" class="health-badge" onclick="switchNavTab('health')" style="cursor: pointer;">
+        <span id="health-emoji">🌸</span>
+        <span id="health-state">Blooming Blossom</span>
+        <span id="health-score" class="score-pill">85.0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Real Money Setup Bar -->
+  <div id="real-setup-bar" class="real-setup-bar hidden">
+    <div class="setup-bar-info">
+      <strong>⚙️ Real Money Setup:</strong> Enter your bank cash cushion & monthly income to generate accurate personalized forecasts.
+    </div>
+    <div class="setup-bar-inputs">
+      <input type="number" id="quick-cushion" placeholder="Bank Cash" step="100">
+      <input type="number" id="quick-income" placeholder="Monthly Income" step="500">
+      <button class="btn-save-setup" onclick="saveRealMoneySetup()">Save Setup</button>
+    </div>
+  </div>
+
+  <main class="dashboard-container">
+
+    <!-- 🚀 UNIQUE SPECIAL HOLOGRAPHIC HERO TITLE SECTION -->
+    <div class="hero-header-banner">
+      <div class="hero-badge-tag">
+        <span class="pulse-dot" style="background:#38bdf8;"></span>
+        <span>NEXT-GEN AI CASH COPILOT</span>
+      </div>
+      <h1 class="hero-app-title">RESILIENT POCKET</h1>
+      <p class="hero-app-subtitle">Autonomous Cash Cushion Guardian, Predictive OLS Runway Projection Engine & Amortized Deficit Recovery System</p>
+      
+      <div class="hero-feature-pills">
+        <span class="feature-pill-item">🛡️ Autonomous Budget Guardian</span>
+        <span class="feature-pill-item">🌸 Living Flower Pot Mood Avatars</span>
+        <span class="feature-pill-item">⚡ Microsecond System Telemetry</span>
+        <span class="feature-pill-item">🇮🇳 ₹ INR / $ USD Currency Engine</span>
+      </div>
+    </div>
+
+    <!-- 🌅 Daily Expense Logging Reminder Banner -->
+    <div id="daily-reminder-banner" class="reminder-banner hidden">
+      <div class="reminder-icon-box">🔔</div>
+      <div class="reminder-body">
+        <h4 id="reminder-title">Daily Expense Logging Reminder</h4>
+        <p id="reminder-prompt-text">You haven't logged yesterday's spending yet. Keep your cash runway projection 100% accurate!</p>
+        <div class="reminder-actions">
+          <button class="btn-reminder-zero" onclick="dismissDailyReminderZero()">I Spent ₹0 Yesterday ✅</button>
+          <button class="btn-reminder-log" onclick="switchNavTab('transactions')">Add Expense Now ⚡</button>
+          <button class="btn-reminder-test-push" onclick="triggerNativePhonePopup()">Test Phone Popup 🔔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Capital Shock Alert Banner -->
+    <div id="shock-banner" class="shock-banner hidden">
+      <div class="shock-banner-icon">⚠️</div>
+      <div class="shock-banner-content">
+        <h4 id="shock-banner-title">Emergency Expense Detected!</h4>
+        <p id="shock-banner-msg">Capital shock recovery mode engaged to protect liquid cushion.</p>
+        <div class="recovery-window-selector">
+          <span>Amortization Recovery Pace:</span>
+          <button class="btn-window" onclick="setShockRecovery(7)">Fast (7 Days)</button>
+          <button class="btn-window active" onclick="setShockRecovery(15)">Balanced (15 Days)</button>
+          <button class="btn-window" onclick="setShockRecovery(30)">Relaxed (30 Days)</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== TAB 1: OVERVIEW ==================== -->
+    <section id="tab-overview" class="tab-page active">
+      <!-- 3 Key Clickable Metric Cards -->
+      <div class="metrics-grid">
+        <div class="glass-card metric-card clickable-card" onclick="openMetricModal('cushion')">
+          <div class="metric-header">
+            <span class="metric-title">Available Cash Cushion</span>
+            <span class="metric-icon">💰</span>
+          </div>
+          <div id="metric-cushion" class="metric-value">₹0.00</div>
+          <div class="metric-footer">
+            <span class="metric-subtext">Click to Adjust Cushion ✏️</span>
+          </div>
+        </div>
+
+        <div class="glass-card metric-card primary-glow clickable-card" onclick="switchNavTab('runway')">
+          <div class="metric-header">
+            <span class="metric-title">Predictive Runway</span>
+            <span class="metric-icon">⏱️</span>
+          </div>
+          <div id="metric-runway-days" class="metric-value highlight">0 <span class="unit">Days</span></div>
+          <div class="metric-footer">
+            <span id="metric-exhaustion-date" class="metric-subtext">Exhaustion: -- (Click for Forecast)</span>
+          </div>
+        </div>
+
+        <div class="glass-card metric-card clickable-card" onclick="openMetricModal('budget')">
+          <div class="metric-header">
+            <span class="metric-title">Safe Daily Spending</span>
+            <span class="metric-icon">🛡️</span>
+          </div>
+          <div id="metric-safe-daily" class="metric-value">₹0.00 <span class="unit">/day</span></div>
+          <div class="metric-footer">
+            <span id="metric-brake-status" class="metric-subtext">Pace: Normal (Click to Edit)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Overview Grid -->
+      <div class="main-grid" style="margin-top: 20px;">
+        <!-- Left Column: Quick Transaction Form -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>⚡ Quick Add Expense / Income</h3>
+            <span class="badge-tag">Zero-Dep NLP</span>
+          </div>
+          <form onsubmit="handleTransactionSubmit(event)">
+            <div class="form-group">
+              <label>Merchant / Description</label>
+              <input type="text" id="quick-desc" placeholder="e.g. Curd, Swiggy, Uber, Rent, Salary" required oninput="previewNLPTagQuick(this.value)">
+              <div id="quick-nlp-preview" class="nlp-preview hidden">
+                <span>Category: </span><span id="quick-nlp-tag" class="tag-badge">Food</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label>Amount</label>
+                <input type="number" id="quick-amount" step="0.01" placeholder="100.00" required>
+              </div>
+              <div class="form-group half">
+                <label>Type</label>
+                <select id="quick-type">
+                  <option value="EXPENSE">Expense (-)</option>
+                  <option value="INCOME">Income (+)</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn-submit">Add Transaction</button>
+          </form>
+        </div>
+
+        <!-- Right Column: Category Expense Breakdown -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>📊 Spending by Category</h3>
+            <span class="badge-tag">Auto Tracker</span>
+          </div>
+          <div id="category-breakdown-list" class="category-breakdown-box">
+            <div class="cat-progress-item">
+              <div class="cat-label-row">
+                <span>Food & Dining</span>
+                <span>₹12,410.80 (21.5%)</span>
+              </div>
+              <div class="cat-bar-bg">
+                <div class="cat-bar-fill" style="width: 21.5%; background: #38bdf8;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explanation Box -->
+      <div class="explanation-box">
+        <div class="exp-icon">📘</div>
+        <div class="exp-content">
+          <h4>What is the Overview Dashboard?</h4>
+          <p>
+            The Overview screen gives you a high-level real-time summary of your <strong>Available Cushion</strong>, <strong>Predictive Runway Days</strong>, and <strong>Safe Daily Budget Limit</strong>. Click the <strong>⏱️ Predictive Runway</strong> card or tab to view detailed trajectory charts!
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==================== TAB 2: RUNWAY PREDICTOR ==================== -->
+    <section id="tab-runway" class="tab-page">
+      <div class="glass-card runway-predictor-card">
+        <div class="card-header">
+          <div>
+            <h3>⏱️ Cash Runway Predictor</h3>
+            <span id="runway-radar-subtitle" class="sub-label">AI Cash Projection Engine</span>
+          </div>
+          <div class="chart-header-badges">
+            <span class="badge-tag glow-cyan">Interactive Visualizer</span>
+            <span id="runway-model-fit-pill" class="badge-tag glow-purple">Accuracy: 94%</span>
+          </div>
+        </div>
+
+        <div class="scenario-bar">
+          <span class="scenario-title">Try What-If Scenarios:</span>
+          <div class="scenario-btn-group">
+            <button id="runway-scen-baseline" class="btn-scenario active" onclick="applyRunwayPageScenario('baseline')">📊 Normal Spending</button>
+            <button id="runway-scen-trim25" class="btn-scenario" onclick="applyRunwayPageScenario('trim25')">✂️ Cut Extra Expenses</button>
+            <button id="runway-scen-sidehustle" class="btn-scenario" onclick="applyRunwayPageScenario('sidehustle')">🚀 Add Extra Income</button>
+            <button id="runway-scen-shock" class="btn-scenario" onclick="applyRunwayPageScenario('shock')">💥 Unexpected Emergency</button>
+          </div>
+        </div>
+
+        <div class="runway-slider-card">
+          <div class="slider-header-row">
+            <span class="slider-title">🎯 Set Your Target Goal:</span>
+            <span id="slider-target-val" class="slider-val-highlight">120 Days</span>
+          </div>
+          <input type="range" id="target-runway-slider" min="30" max="240" step="5" value="120" oninput="handleRunwaySlider(this.value)">
+          <div id="slider-recommendation-banner" class="slider-rec-banner">
+            💡 <strong>AI Recommendation:</strong> To make your cash last <strong>120 Days</strong>, reduce daily spending or add extra cushion reserves.
+          </div>
+        </div>
+
+        <div class="svg-chart-container radar-chart">
+          <svg id="runway-radar-svg" viewBox="0 0 900 320" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="radarAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.4" />
+                <stop offset="60%" stop-color="#8b5cf6" stop-opacity="0.15" />
+                <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
+              </linearGradient>
+              <linearGradient id="radarLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="50%" stop-color="#8b5cf6" />
+                <stop offset="85%" stop-color="#f59e0b" />
+                <stop offset="100%" stop-color="#ef4444" />
+              </linearGradient>
+              <filter id="radarGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            <rect x="50" y="40" width="800" height="70" fill="rgba(16, 185, 129, 0.06)" rx="6" />
+            <text x="140" y="60" class="svg-axis-label green">🟢 Safe Zone (>90 Days Cash)</text>
+
+            <rect x="50" y="110" width="800" height="70" fill="rgba(245, 158, 11, 0.06)" rx="6" />
+            <text x="140" y="130" class="svg-axis-label amber">🟡 Caution Zone (30–90 Days)</text>
+
+            <rect x="50" y="180" width="800" height="80" fill="rgba(239, 68, 68, 0.08)" rx="6" />
+            <text x="140" y="200" class="svg-axis-label red">🔴 Danger Zone (<30 Days)</text>
+
+            <line x1="50" y1="40" x2="850" y2="40" class="svg-grid-line" />
+            <line x1="50" y1="110" x2="850" y2="110" class="svg-grid-line" />
+            <line x1="50" y1="180" x2="850" y2="180" class="svg-grid-line" />
+            <line x1="50" y1="260" x2="850" y2="260" class="svg-grid-line red-horizon" />
+
+            <path id="radar-svg-area" d="M 50 40 L 850 260 L 850 260 L 50 260 Z" fill="url(#radarAreaGradient)" />
+            <path id="radar-svg-line" d="M 50 40 L 850 260" fill="none" stroke="url(#radarLineGradient)" stroke-width="3.5" filter="url(#radarGlow)" />
+
+            <line id="radar-target-line" x1="450" y1="40" x2="450" y2="260" stroke="#10b981" stroke-width="2" stroke-dasharray="6 3" />
+            <text id="radar-target-text" x="455" y="55" class="svg-axis-label green">Target: 120d</text>
+
+            <circle id="radar-depletion-dot" cx="850" cy="260" r="7" fill="#ef4444" filter="url(#radarGlow)" />
+            <circle id="radar-depletion-dot-pulse" cx="850" cy="260" r="12" fill="none" stroke="#ef4444" stroke-width="2" class="svg-pulse" />
+
+            <text x="50" y="285" class="svg-axis-label">Today</text>
+            <text id="radar-mid-label" x="440" y="285" class="svg-axis-label">Day 45</text>
+            <text id="radar-end-label" x="780" y="285" class="svg-axis-label red">Money Runs Out</text>
+
+            <text id="radar-max-val" x="10" y="44" class="svg-axis-label">Max</text>
+            <text id="radar-min-val" x="15" y="264" class="svg-axis-label red">0</text>
+          </svg>
+        </div>
+
+        <div class="runway-details-grid" style="margin-top: 24px;">
+          <div class="runway-stat-box primary-glow">
+            <span class="stat-lbl">Daily Spending Pace</span>
+            <span id="runway-page-burn" class="stat-val">₹0.00 / day</span>
+          </div>
+          <div class="runway-stat-box">
+            <span class="stat-lbl">Days Money Will Last</span>
+            <span id="runway-page-days" class="stat-val highlight">0 Days</span>
+          </div>
+          <div class="runway-stat-box">
+            <span class="stat-lbl">Estimated End Date</span>
+            <span id="runway-page-exhaustion" class="stat-val">--</span>
+          </div>
+          <div class="runway-stat-box">
+            <span class="stat-lbl">Forecast Model</span>
+            <span id="runway-page-eq" class="stat-val mono">y = mx + c</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="explanation-box">
+        <div class="exp-icon">📘</div>
+        <div class="exp-content">
+          <h4>How does the Cash Runway Predictor work?</h4>
+          <p>
+            The predictor calculates your average daily spending rate and compares it with your bank cushion to project exactly when your money will run out. Try the buttons or slider above to see how small changes add extra months to your runway!
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==================== TAB 3: TRANSACTIONS ==================== -->
+    <section id="tab-transactions" class="tab-page">
+      <div class="main-grid">
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>⚡ Log Transaction with Real-Time NLP</h3>
+            <span class="badge-tag">Auto-Categorizer</span>
+          </div>
+          <form onsubmit="handleTransactionSubmit(event)">
+            <div class="form-group">
+              <label for="tx-desc">Transaction Description / Merchant</label>
+              <input type="text" id="tx-desc" placeholder="e.g. Curd, Swiggy, Uber, Rent, Salary" required oninput="previewNLPTag()">
+              <div id="nlp-preview" class="nlp-preview hidden">
+                <span>Auto-Detected Category: </span>
+                <span id="nlp-tag" class="tag-badge">Food</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="tx-amount">Amount</label>
+                <input type="number" id="tx-amount" step="0.01" placeholder="450.00" required>
+              </div>
+              <div class="form-group half">
+                <label for="tx-type">Type</label>
+                <select id="tx-type">
+                  <option value="EXPENSE">Expense (-)</option>
+                  <option value="INCOME">Income (+)</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn-submit">Record Transaction & Recalculate</button>
+          </form>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>📜 SQLite Transaction Ledger</h3>
+            <span id="tx-count-badge" class="badge-tag">0 Records</span>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="tx-table-body">
+                <tr><td colspan="5">Loading transaction ledger...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="explanation-box">
+        <div class="exp-icon">📘</div>
+        <div class="exp-content">
+          <h4>How does the Zero-Dependency NLP Tagger work?</h4>
+          <p>
+            The real-time tagger parses merchant descriptions (e.g. <em>"Curd"</em>, <em>"Swiggy Biryani"</em>, <em>"Uber Ride"</em>) into word tokens and uses high-speed set matching to automatically assign categories without needing slow cloud AI.
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==================== TAB 4: CAPITAL SHOCK RECOVERY ==================== -->
+    <section id="tab-shocks" class="tab-page">
+      <div class="glass-card">
+        <div class="card-header">
+          <h3>🛡️ Emergency Expense Shock Recovery</h3>
+          <span class="badge-tag">Budget Protection</span>
+        </div>
+
+        <!-- Super Simple Human Explanation Box -->
+        <div class="copilot-guide-card" style="margin-top: 10px;">
+          <h5>💡 How Shock Recovery Protects Your Money:</h5>
+          <ul>
+            <li><strong>What is a Capital Shock?</strong> An unexpected large bill (like a hospital emergency, car breakdown, or laptop repair).</li>
+            <li><strong>Why do we need Recovery?</strong> Instead of draining your bank balance to zero in 1 day, Resilient Pocket spreads the bill over 7, 15, or 30 days so your daily pocket budget stays completely safe!</li>
+          </ul>
+        </div>
+
+        <div id="shock-page-status" class="shock-page-box" style="margin-top: 16px;">
+          <h4>Status: <span id="shock-status-txt">Normal Operations</span></h4>
+          <p id="shock-status-desc">No active shock deficit detected. Daily budget allowance is running at normal baseline.</p>
+        </div>
+
+        <!-- Visual Amortization Recovery Pace Selector -->
+        <h4 style="margin: 20px 0 10px;">⚡ Choose Your Recovery Pace:</h4>
+        <div class="shock-visualizer-grid">
+          
+          <div class="pace-card" onclick="setShockRecovery(7)">
+            <div class="pace-header">
+              <span>⚡ 7-Day Fast Recovery</span>
+              <span class="pace-days-pill">7 Days</span>
+            </div>
+            <div id="brake-7d-val" class="pace-brake-val">+₹1,000 / day brake</div>
+            <p class="pace-desc">Amortizes emergency expense quickly over 1 week. Restores full cushion balance fast.</p>
+          </div>
+
+          <div class="pace-card active" onclick="setShockRecovery(15)">
+            <div class="pace-header">
+              <span>⚖️ 15-Day Smooth Recovery</span>
+              <span class="pace-days-pill">15 Days</span>
+            </div>
+            <div id="brake-15d-val" class="pace-brake-val">+₹466 / day brake</div>
+            <p class="pace-desc">Recommended smooth pace. Spreads bill over half a month so your daily lifestyle stays comfortable.</p>
+          </div>
+
+          <div class="pace-card" onclick="setShockRecovery(30)">
+            <div class="pace-header">
+              <span>🏖️ 30-Day Relaxed Spread</span>
+              <span class="pace-days-pill">30 Days</span>
+            </div>
+            <div id="brake-30d-val" class="pace-brake-val">+₹233 / day brake</div>
+            <p class="pace-desc">Minimal daily spending adjustment spread gently over a full month.</p>
+          </div>
+
+        </div>
+
+        <div class="sim-shock-card" style="margin-top:24px;">
+          <h4>💥 Test Capital Shock Simulation</h4>
+          <p>Simulate an unexpected large expense (e.g. Laptop Repair or Medical Bill) to see how your daily budget limit adjusts.</p>
+          <div class="form-row" style="margin-top: 12px;">
+            <input type="text" id="sim-shock-desc" placeholder="Emergency Description (e.g. Medical Bill)" style="flex:2;">
+            <input type="number" id="sim-shock-amount" placeholder="Amount (e.g. 15000)" style="flex:1;">
+            <button type="button" class="btn-submit" style="width:auto; padding:10px 20px;" onclick="simulateCapitalShock()">Trigger Shock</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==================== TAB 5: CUTE FLOWER POT MOODS ==================== -->
+    <section id="tab-health" class="tab-page">
+      <div class="glass-card">
+        <div class="card-header">
+          <h3>🌸 Living Financial Flower Pot Avatars</h3>
+          <span class="badge-tag">Resilient Garden Matrix</span>
+        </div>
+
+        <!-- Flower Pot Mood Pipeline -->
+        <div class="fsm-pipeline-bar">
+          <div id="state-node-thriving" class="fsm-node active">
+            <img src="flower-blooming.svg" alt="Blooming Blossom" class="flower-node-img">
+            <span class="fsm-node-name">Blooming Blossom</span>
+            <span class="fsm-node-range">(Score 80–100)</span>
+          </div>
+          <div class="fsm-line"></div>
+          <div id="state-node-steady" class="fsm-node">
+            <img src="flower-healthy.svg" alt="Healthy Sunflower" class="flower-node-img">
+            <span class="fsm-node-name">Healthy Sunflower</span>
+            <span class="fsm-node-range">(Score 60–79)</span>
+          </div>
+          <div class="fsm-line"></div>
+          <div id="state-node-drooping" class="fsm-node">
+            <img src="flower-drooping.svg" alt="Drooping Petals" class="flower-node-img">
+            <span class="fsm-node-name">Drooping Petals</span>
+            <span class="fsm-node-range">(Score 40–59)</span>
+          </div>
+          <div class="fsm-line"></div>
+          <div id="state-node-critical" class="fsm-node">
+            <img src="flower-withered.svg" alt="Withered Rescue" class="flower-node-img">
+            <span class="fsm-node-name">Withered Rescue Alert</span>
+            <span class="fsm-node-range">(Score &lt;40)</span>
+          </div>
+        </div>
+
+        <!-- Main Flower Pot Banner with Active Flower Mood SVG -->
+        <div class="health-overview-banner" style="margin-top: 20px;">
+          <div class="health-main-score">
+            <img id="hero-flower-mood-img" src="flower-blooming.svg" alt="Flower Mood Avatar" class="hero-flower-mood-img">
+            <div>
+              <h2 id="health-page-state">Blooming Blossom Flower 🌸</h2>
+              <span id="health-page-score" class="score-display">Score: 85.0 / 100</span>
+            </div>
+          </div>
+          <div id="health-page-prompt" class="health-prompt-text">
+            Blooming Health: Cash reserves are thriving! Your financial garden is in full bloom.
+          </div>
+        </div>
+
+        <!-- 4 Pillar Circular Gauge Rings -->
+        <h4 style="margin: 24px 0 14px;">📊 4 Financial Pillar Gauges</h4>
+        <div class="rings-grid">
+          
+          <div class="glass-card ring-card">
+            <div class="ring-wrapper">
+              <svg viewBox="0 0 100 100" class="ring-svg">
+                <circle cx="50" cy="50" r="40" class="ring-bg" />
+                <circle id="ring-cushion" cx="50" cy="50" r="40" class="ring-fill cyan" stroke-dasharray="251.2" stroke-dashoffset="25.1" />
+              </svg>
+              <div id="pillar-cushion" class="ring-value">95.6</div>
+            </div>
+            <span class="ring-title">1. Cushion Ratio (35%)</span>
+            <span class="ring-sub">Reserve Cushion vs 3-Mo Target</span>
+          </div>
+
+          <div class="glass-card ring-card">
+            <div class="ring-wrapper">
+              <svg viewBox="0 0 100 100" class="ring-svg">
+                <circle cx="50" cy="50" r="40" class="ring-bg" />
+                <circle id="ring-runway" cx="50" cy="50" r="40" class="ring-fill green" stroke-dasharray="251.2" stroke-dashoffset="0" />
+              </svg>
+              <div id="pillar-runway" class="ring-value">100</div>
+            </div>
+            <span class="ring-title">2. Runway Days (35%)</span>
+            <span class="ring-sub">Days Remaining (&gt;90d Target)</span>
+          </div>
+
+          <div class="glass-card ring-card">
+            <div class="ring-wrapper">
+              <svg viewBox="0 0 100 100" class="ring-svg">
+                <circle cx="50" cy="50" r="40" class="ring-bg" />
+                <circle id="ring-shock" cx="50" cy="50" r="40" class="ring-fill amber" stroke-dasharray="251.2" stroke-dashoffset="0" />
+              </svg>
+              <div id="pillar-shock" class="ring-value">100</div>
+            </div>
+            <span class="ring-title">3. Shock Severity (15%)</span>
+            <span class="ring-sub">Active Shock Deficit Deduction</span>
+          </div>
+
+          <div class="glass-card ring-card">
+            <div class="ring-wrapper">
+              <svg viewBox="0 0 100 100" class="ring-svg">
+                <circle cx="50" cy="50" r="40" class="ring-bg" />
+                <circle id="ring-stability" cx="50" cy="50" r="40" class="ring-fill purple" stroke-dasharray="251.2" stroke-dashoffset="25.1" />
+              </svg>
+              <div id="pillar-stability" class="ring-value">90.0</div>
+            </div>
+            <span class="ring-title">4. Spending Stability (15%)</span>
+            <span class="ring-sub">Daily Spend Volatility Index</span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="explanation-box">
+        <div class="exp-icon">📘</div>
+        <div class="exp-content">
+          <h4>How do Flower Pot Financial Avatars work?</h4>
+          <p>
+            Your living flower pot reflects your financial health score (0–100). As your cash runway grows or shrinks, your flower shifts between <strong>Blooming Blossom 🌸</strong>, <strong>Healthy Sunflower 🌻</strong>, <strong>Drooping Petals 🥀</strong>, and <strong>Withered Rescue 🏜️</strong>!
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==================== TAB 6: TELEMETRY ==================== -->
+    <section id="tab-telemetry" class="tab-page">
+      <div class="glass-card">
+        <div class="card-header">
+          <h3>⏱️ Microsecond System Telemetry Audit</h3>
+          <span class="badge-tag mono">time.perf_counter()</span>
+        </div>
+
+        <div class="telemetry-stats">
+          <div class="tele-stat">
+            <span class="tele-label">Total Monitored Calls</span>
+            <span id="tele-total-page" class="tele-val">0</span>
+          </div>
+          <div class="tele-stat">
+            <span class="tele-label">Average Latency</span>
+            <span id="tele-avg-page" class="tele-val">0 µs</span>
+          </div>
+          <div class="tele-stat">
+            <span class="tele-label">Peak Latency</span>
+            <span id="tele-max-page" class="tele-val">0 µs</span>
+          </div>
+        </div>
+
+        <div class="telemetry-log-table" style="max-height: 380px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Operation</th>
+                <th>Latency (µs)</th>
+                <th>Latency (ms)</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="telemetry-table-body-page">
+              <tr><td colspan="4">Loading telemetry metrics...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ==================== INTERACTIVE METRIC ADJUSTMENT MODAL ==================== -->
+  <div id="metric-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Adjust Financial Parameter</h3>
+        <button class="btn-modal-close" onclick="closeMetricModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label id="modal-label">Enter new liquid cash cushion:</label>
+        <input type="number" id="modal-input-val" step="500" placeholder="100000">
+        <p id="modal-hint" class="modal-hint-txt">This will immediately update your cash trajectory curve and runway days forecast.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" onclick="closeMetricModal()">Cancel</button>
+        <button class="btn-modal-save" onclick="saveMetricAdjustment()">Save & Recalculate 🚀</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== FLOATING GLASSMORTIC AI FINANCIAL COPILOT BUTTON ==================== -->
+  <button id="ai-floating-btn" class="ai-floating-btn" onclick="toggleAICopilotDrawer()">
+    <span class="robot-icon">🧠</span>
+    <span class="ai-btn-text">AI Copilot</span>
+  </button>
+
+  <!-- Expandable AI Copilot Side Drawer -->
+  <div id="ai-copilot-drawer" class="ai-copilot-drawer hidden">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <div class="brand-icon-box" style="width:32px; height:32px; border-radius:8px;">
+          <svg viewBox="0 0 24 24" style="width:18px; height:18px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <h4>RESILIENT AI COPILOT</h4>
+          <span class="drawer-subtitle">Explainable Cash Assistant</span>
+        </div>
+      </div>
+      <button class="btn-drawer-close" onclick="toggleAICopilotDrawer()">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- 📖 How Copilot Works Guide Box -->
+      <div class="copilot-guide-card">
+        <h5>💡 How Your AI Copilot Works:</h5>
+        <ul>
+          <li><strong>Ask Any Spending Question:</strong> Type queries like <em>"Can I buy a ₹15,000 phone?"</em> or <em>"How do I extend my cash runway by 30 days?"</em></li>
+          <li><strong>1-Click Quick Prompts:</strong> Click any of the purple preset buttons below for instant answers.</li>
+          <li><strong>Explainable Telemetry:</strong> Every answer provides a step-by-step breakdown showing exact math and buffer impacts!</li>
+        </ul>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-section-title">🎯 Savings Target Goal</div>
+        <div class="savings-goal-widget">
+          <div class="goal-info-row">
+            <span id="goal-current-txt" class="goal-val">₹18,500</span>
+            <span id="goal-target-txt" class="goal-target">Goal: ₹50,000</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="goal-progress-fill" class="progress-bar-fill" style="width: 37%;"></div>
+          </div>
+          <div class="goal-footer">
+            <span id="goal-pct-txt" class="goal-sub">37.0% Achieved</span>
+            <span id="goal-remaining-txt" class="goal-sub">₹31,500 Remaining</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="drawer-section-title">💬 Ask AI Copilot</div>
+        <div class="preset-queries-bar">
+          <button class="btn-preset" onclick="sendPresetQuery('Can I afford a ₹5,000 purchase today?')">"Can I afford ₹5,000?"</button>
+          <button class="btn-preset" onclick="sendPresetQuery('Where can I trim discretionary spending?')">"Where to trim spending?"</button>
+          <button class="btn-preset" onclick="sendPresetQuery('Why is my health score at this level?')">"Explain health score"</button>
+        </div>
+
+        <div id="chat-history" class="chat-history-box">
+          <div class="chat-msg system">
+            <div class="msg-author">🤖 RESILIENT AI COPILOT</div>
+            <div class="msg-body">
+              Welcome! I am your AI Cash Copilot. Ask me spending questions or click the quick prompt buttons above to see live financial projections!
+            </div>
+          </div>
+        </div>
+
+        <form onsubmit="handleAssistantChatSubmit(event)" class="chat-input-form">
+          <input type="text" id="chat-user-input" placeholder="Type a spending question..." required>
+          <button type="submit" class="btn-send-chat">Ask Copilot 🚀</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="canvas_physics.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
